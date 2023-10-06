@@ -12,10 +12,15 @@ repositories {
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"
-    runtimeOnly "org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"
-    implementation "dev.inmo:tgbotapi:9.2.1"
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3'
+    implementation 'org.slf4j:slf4j-api:1.7.36'
+    implementation 'dev.inmo:tgbotapi:9.2.1'
+    implementation 'ch.qos.logback:logback-core:1.4.11'
+    implementation 'ch.qos.logback:logback-classic:1.4.11'
+
     testImplementation 'org.jetbrains.kotlin:kotlin-test'
+
+    runtimeOnly 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0'
 }
 
 test {
