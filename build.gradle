@@ -1,0 +1,27 @@
+plugins {
+    id "application"
+    id 'org.jetbrains.kotlin.jvm' version '1.9.0'
+    id 'org.jetbrains.kotlin.plugin.serialization' version '1.7.20'
+}
+
+group = 'org.scroogemcfawk'
+version = '0.0.1'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"
+    runtimeOnly "org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"
+    implementation "dev.inmo:tgbotapi:9.2.1"
+    testImplementation 'org.jetbrains.kotlin:kotlin-test'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+kotlin {
+    jvmToolchain(8)
+}
