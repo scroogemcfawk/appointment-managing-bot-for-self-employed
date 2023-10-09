@@ -6,5 +6,6 @@ import kotlinx.serialization.json.JsonObject
 @Serializable
 data class Locale(
     val startMessage: String,
-    val helpMessage: String
+    val helpMessage: String,
+    val unknownCommand: String,
 )
