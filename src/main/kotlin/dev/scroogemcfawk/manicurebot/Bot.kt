@@ -1,54 +1,25 @@
 package dev.scroogemcfawk.manicurebot
 
-import dev.inmo.micro_utils.common.PreviewFeature
-import dev.inmo.micro_utils.coroutines.runCatchingSafely
 import dev.inmo.tgbotapi.extensions.api.answers.answerCallbackQuery
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
-import dev.inmo.tgbotapi.extensions.api.chat.modify.setChatPhoto
-import dev.inmo.tgbotapi.extensions.api.edit.caption.editMessageCaption
-import dev.inmo.tgbotapi.extensions.api.edit.reply_markup.editMessageReplyMarkup
-import dev.inmo.tgbotapi.extensions.api.edit.text.editMessageText
-import dev.inmo.tgbotapi.extensions.api.files.downloadFile
 import dev.inmo.tgbotapi.extensions.api.send.reply
-import dev.inmo.tgbotapi.extensions.api.send.send
 import dev.inmo.tgbotapi.extensions.api.send.sendMessage
 import dev.inmo.tgbotapi.extensions.api.telegramBot
 import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviourWithLongPolling
-import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitText
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
 import dev.inmo.tgbotapi.extensions.utils.*
-import dev.inmo.tgbotapi.extensions.utils.extensions.raw.message
-import dev.inmo.tgbotapi.extensions.utils.extensions.raw.text
-import dev.inmo.tgbotapi.extensions.utils.types.buttons.*
-import dev.inmo.tgbotapi.requests.abstracts.asMultipartFile
-import dev.inmo.tgbotapi.requests.send.SendTextMessage
 import dev.inmo.tgbotapi.types.ChatId
-import dev.inmo.tgbotapi.types.UserId
-import dev.inmo.tgbotapi.types.buttonField
-import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.CallbackDataInlineKeyboardButton
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.InlineKeyboardButton
-import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.URLInlineKeyboardButton
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardMarkup
-import dev.inmo.tgbotapi.types.buttons.KeyboardButtonRequestChat
 import dev.inmo.tgbotapi.types.buttons.inline.dataInlineButton
-import dev.inmo.tgbotapi.types.buttons.reply.simpleReplyButton
-import dev.inmo.tgbotapi.types.chat.CommonBot
-import dev.inmo.tgbotapi.types.chat.ExtendedBot
-import dev.inmo.tgbotapi.utils.botCommand
-import dev.inmo.tgbotapi.utils.flatMatrix
-import dev.inmo.tgbotapi.utils.row
-import io.ktor.server.util.*
+import dev.inmo.tgbotapi.types.queries.callback.DataCallbackQuery
+import dev.inmo.tgbotapi.utils.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.first
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
 import org.slf4j.LoggerFactory
-import java.text.SimpleDateFormat
 import java.time.LocalDate
-import java.time.Month
-import java.util.*
+import kotlin.collections.ArrayList
 
 class Bot(token: String, val locale: Locale) {
 
@@ -57,7 +28,6 @@ class Bot(token: String, val locale: Locale) {
     val log = LoggerFactory.getLogger(Bot::class.java)
 
     val dev = ChatId(471271839)
-
 
     suspend fun run(): Job {
         return bot.buildBehaviourWithLongPolling(scope) {
@@ -83,65 +53,164 @@ class Bot(token: String, val locale: Locale) {
                 )
             }
 
-            onCommand("addAppointment") { msg ->
-                val today = LocalDate.now()
-                sendMessage(msg.chat.id, replyMarkup = InlineKeyboardMarkup(flatMatrix {
-                    dataButton(today.month.toString(), "appointment:month:${today.month}")
-                    dataButton(
-                        today.month.plus(1).toString(), "appointment:month:${
-                            today.month.plus(1)
-                        }"
-                    )
-                })) {
-                    +"Select month:"
-                }
+            onCommand("signup", requireOnlyCommandInMessage = true) {
+                sendMessage(
+                    it.chat.id,
+                    "Select day:",
+                    replyMarkup = getInlineCalendarMarkup(date = LocalDate.now())
+                )
             }
 
-            onDataCallbackQuery {
-                var callBackFullfilled = false
-                val (source, data) = it.data.split(":", limit = 2)
-                when (source) {
-                    "appointment" -> {
-                        val (dest, value) = data.split(":")
-                        when (dest) {
-                            "month" -> {
-                                log.info("appointment is on ${value}")
-                                log.info("${it.message?.messageId}")
-                                editMessageText(it.user.id,
-                                    it.message!!.messageId, "Select date: ")
-                                editMessageReplyMarkup(
-                                    it.user.id,
-                                    it.message!!.messageId,
-                                    replyMarkup = InlineKeyboardMarkup (
-                                        flatMatrix(
-                                            dataInlineButton("1", "1"),
-                                            dataInlineButton("2", "2")
-                                        )
-                                ))
-//                                callBackFullfilled = true
-//                                answerCallbackQuery(it)
-//                                it.message.messageId
-                            }
+            onDataCallbackQuery { cb ->
+                processCallback(cb)
+            }
 
-                            else -> {
-                                log.warn("Unrecognized appointment destination \"${dest}\".")
-                            }
-                        }
+            log.info("Bot is running.")
+            log.info(me.toString())
+        }
+    }
+
+    private suspend fun processCallback(cb: DataCallbackQuery) {
+        val (source, data) = cb.data.split(":", limit = 2)
+        when (source) {
+            "empty" -> {
+                answerEmpty(cb)
+            }
+
+            "signup" -> {
+                val (action, value) = data.split(":", limit = 2)
+                when (action) {
+                    "select" -> {
+                        val (ys, ms, ds) = value.split(":")
+                        val y = ys.split("=")[1]
+                        val m = ms.split("=")[1]
+                        val d = ds.split("=")[1]
+                        val ld = LocalDate.of(y.toInt(), m.toInt(), d.toInt())
+                        this.bot.answerCallbackQuery(cb, "Запись добавлена на $d.$m.$y")
+                        log.info(value)
+                        log.info(ld.toString())
                     }
 
                     else -> {
-                        log.warn("Unrecognized callback source \"${source}\".")
+                        answerInvalid(cb)
+                        log.warn("Invalid signup action: $action")
                     }
                 }
-//                if (!callBackFullfilled) {
-//                    answerCallbackQuery(it, "Failed to finish operation.")
-//                }
-                println(source)
-                println(data)
             }
 
-            log.info("Bot is initialized and running: ")
-            println(me)
+            else -> {
+                answerInvalid(cb)
+                log.warn("Invalid source: $source")
+            }
         }
+    }
+
+    private suspend fun answerEmpty(cb: DataCallbackQuery) {
+        this.bot.answerCallbackQuery(cb, "")
+    }
+
+    private suspend fun answerInvalid(cb: DataCallbackQuery) {
+        this.bot.answerCallbackQuery(cb, "Invalid callback.")
+    }
+
+
+    private fun getInlineCalendarMarkup(date: LocalDate): InlineKeyboardMarkup {
+        val mxb = MatrixBuilder<InlineKeyboardButton>()
+
+        for (i in 0..7) {
+            val rb = RowBuilder<InlineKeyboardButton>()
+
+            when (i) {
+                0 -> {
+                    if (date.month > LocalDate.now().month) {
+                        rb.add(dataInlineButton("<", "calendar:prevMonth:"))
+                    } else {
+                        rb.add(dataInlineButton(" ", "empty:"))
+                    }
+                    rb.add(dataInlineButton("${date.month}", "empty:"))
+                    rb.add(dataInlineButton(">", "calendar:nextMonth:"))
+                }
+
+                1 -> {
+                    rb.add(dataInlineButton(locale.mondayShort, "empty:"))
+                    rb.add(dataInlineButton(locale.tuesdayShort, "empty:"))
+                    rb.add(dataInlineButton(locale.wednesdayShort, "empty:"))
+                    rb.add(dataInlineButton(locale.thursdayShort, "empty:"))
+                    rb.add(dataInlineButton(locale.fridayShort, "empty:"))
+                    rb.add(dataInlineButton(locale.saturdayShort, "empty:"))
+                    rb.add(dataInlineButton(locale.sundayShort, "empty:"))
+                }
+
+                else -> {
+                    for (b in getRowList(i - 2, date)) {
+                        rb.add(b)
+                    }
+                }
+            }
+            mxb.add(rb.row)
+        }
+
+        return InlineKeyboardMarkup(
+            mxb.matrix
+        )
+    }
+
+    private fun getRowList(r: Int, date: LocalDate): java.util.ArrayList<InlineKeyboardButton> {
+        val ret = ArrayList<InlineKeyboardButton>()
+        val year = date.year
+        val month = date.month.ordinal
+        val firstDayOfWeekInMonth = LocalDate.of(date.year, date.month, 1).dayOfWeek.ordinal
+        val daysInFirstWeekInMonth = 7 - firstDayOfWeekInMonth
+        val lastDayOfMonth = LocalDate.of(date.year, date.month.plus(1), 1).minusDays(1).dayOfMonth
+
+
+        var nonempty = false
+
+        for (i in 0..6) {
+            if (r == 0) {
+                if (i < firstDayOfWeekInMonth) {
+                    ret.add(dataInlineButton(" ", "empty:"))
+                } else {
+                    val dayNumber = i - firstDayOfWeekInMonth + 1
+                    if (dayNumber >= LocalDate.now().dayOfMonth) {
+                        val dayLabel =
+                            if (dayNumber == LocalDate.now().dayOfMonth) "[ $dayNumber ]" else "$dayNumber"
+                        ret.add(
+                            dataInlineButton(
+                                dayLabel,
+                                "signup:select:year=$year:month=${month + 1}:day=$dayNumber"
+                            )
+                        )
+                        nonempty = true
+                    } else {
+                        ret.add(
+                            dataInlineButton(
+                                " ",
+                                "empty:"
+                            )
+                        )
+                    }
+                }
+            } else {
+                val dayNumber = i - firstDayOfWeekInMonth + 1 + r * 7
+                if (dayNumber <= lastDayOfMonth) {
+                    val dayLabel =
+                        if (dayNumber == LocalDate.now().dayOfMonth) "[ $dayNumber ]" else "$dayNumber"
+                    ret.add(
+                        dataInlineButton(
+                            dayLabel,
+                            "signup:select:year=$year:month=${month + 1}:day=$dayNumber"
+                        )
+                    )
+                    nonempty = true
+                } else {
+                    ret.add(dataInlineButton(" ", "empty:"))
+                }
+            }
+        }
+        if (!nonempty) {
+            return ArrayList()
+        }
+        return ret
     }
 }

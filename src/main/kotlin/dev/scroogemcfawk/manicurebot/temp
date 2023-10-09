@@ -1,0 +1,51 @@
+onCommand("addAppointment") { msg ->
+                val today = LocalDate.now()
+                sendMessage(msg.chat.id, replyMarkup = InlineKeyboardMarkup(flatMatrix {
+                    dataButton(today.month.toString(), "appointment:month:${today.month}")
+                    dataButton(
+                        today.month.plus(1).toString(), "appointment:month:${
+                            today.month.plus(1)
+                        }"
+                    )
+                })) {
+                    +"Select month:"
+                }
+            }
+
+            onDataCallbackQuery {
+                var callBackFullfilled = false
+                val (source, data) = it.data.split(":", limit = 2)
+                when (source) {
+                    "appointment" -> {
+                        val (dest, value) = data.split(":")
+                        when (dest) {
+                            "month" -> {
+                                log.info("appointment is on ${value}")
+                                log.info("${it.message?.messageId}")
+                                editMessageText(it.user.id,
+                                    it.message!!.messageId, "Select date: ")
+                                editMessageReplyMarkup(
+                                    it.user.id,
+                                    it.message!!.messageId,
+                                    replyMarkup = InlineKeyboardMarkup (
+                                        flatMatrix(
+                                            dataInlineButton("1", "1"),
+                                            dataInlineButton("2", "2")
+                                        )
+                                ))
+//                                callBackFullfilled = true
+//                                answerCallbackQuery(it)
+//                                it.message.messageId
+                            }
+
+                            else -> {
+                                log.warn("Unrecognized appointment destination \"${dest}\".")
+                            }
+                        }
+                    }
+
+                    else -> {
+                        log.warn("Unrecognized callback source \"${source}\".")
+                    }
+                }
+            }
