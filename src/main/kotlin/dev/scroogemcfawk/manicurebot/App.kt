@@ -14,9 +14,7 @@ suspend fun main(args: Array<String>) {
     val json = Json { ignoreUnknownKeys = true }
     val config = json.decodeFromString(Config.serializer(), File(args.first()).readText())
     val locale = json.decodeFromString(Locale.serializer(), File(config.locale).readText())
-    val bot = Bot(config.token, locale)
-
-
+    val bot = Bot(config.token, locale, config.dev, config.owner)
 
     bot.run().join()
 

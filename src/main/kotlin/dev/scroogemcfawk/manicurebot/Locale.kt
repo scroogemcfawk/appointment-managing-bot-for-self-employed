@@ -6,7 +6,9 @@ import kotlinx.serialization.Serializable
 data class Locale(
     val startMessage: String,
     val helpMessage: String,
+
     val unknownCommand: String,
+
     val mondayShort: String,
     val tuesdayShort: String,
     val wednesdayShort: String,
