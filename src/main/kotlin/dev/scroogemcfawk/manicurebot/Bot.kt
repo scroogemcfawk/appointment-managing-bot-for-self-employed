@@ -8,7 +8,6 @@ import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.send
 import dev.inmo.tgbotapi.extensions.api.send.sendMessage
 import dev.inmo.tgbotapi.extensions.api.telegramBot
-import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviourWithFSMAndStartLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviourWithLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.*
 import dev.inmo.tgbotapi.extensions.utils.*
@@ -16,11 +15,10 @@ import dev.inmo.tgbotapi.extensions.utils.extensions.raw.message
 import dev.inmo.tgbotapi.types.ChatId
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.InlineKeyboardButton
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardMarkup
-import dev.inmo.tgbotapi.types.buttons.ReplyKeyboardRemove
 import dev.inmo.tgbotapi.types.buttons.inline.dataInlineButton
+import dev.inmo.tgbotapi.types.chatField
 import dev.inmo.tgbotapi.types.queries.callback.DataCallbackQuery
 import dev.inmo.tgbotapi.utils.*
-import korlibs.time.DateTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -42,11 +40,19 @@ class Bot(token: String, val locale: Locale, val dev: ChatId, val owner: ChatId)
 
     var add: LocalDate? = null
 
-    val appointments = ArrayList<LocalDateTime>()
+    val appointments = ArrayList<Appointment>()
 
-    init{
+    init {
         managers.add(dev)
         managers.add(owner)
+        mock()
+    }
+
+    fun mock() {
+        appointments.add(Appointment(LocalDateTime.of(2023, Month.OCTOBER, 13, 11, 30), null))
+        appointments.add(Appointment(LocalDateTime.of(2023, Month.OCTOBER, 15, 15, 30), null))
+        appointments.add(Appointment(LocalDateTime.of(2023, Month.OCTOBER, 16, 12, 30), null))
+        appointments.add(Appointment(LocalDateTime.of(2023, Month.OCTOBER, 23, 17, 45), null))
     }
 
     suspend fun run(): Job {
@@ -77,7 +83,17 @@ class Bot(token: String, val locale: Locale, val dev: ChatId, val owner: ChatId)
 
             //===============CLIENT COMMANDS==============================
 
-
+            onCommand("signup", requireOnlyCommandInMessage = true) {
+                if (appointments.hasAvailable()) {
+                    send(
+                        it.chat.id,
+                        "Choose an appointment:",
+                        replyMarkup = getInlineAvailableAppointmentsMarkup(it.chat.id.chatId)
+                    )
+                } else {
+                    send(it.chat.id, "Appointments are not available.")
+                }
+            }
 
             //===============MANAGER COMMANDS==============================
 
@@ -94,11 +110,11 @@ class Bot(token: String, val locale: Locale, val dev: ChatId, val owner: ChatId)
             onCommand("list", requireOnlyCommandInMessage = true) {
                 if (it.chat.id in managers) {
                     val strs = ArrayList<String>()
-                    val str = appointments.forEach{ strs.add("${it.hour}:${it.minute.toString().padStart(2, '0')
-                    } ${it.dayOfMonth}.${it.month.value}.${it.year}") }
+//                    val str = appointments.forEach{ strs.add("${it.hour}:${it.minute.toString().padStart(2, '0')
+//                    } ${it.dayOfMonth}.${it.month.value}.${it.year}") }
                     sendMessage(
                         it.chat.id,
-                        strs.joinToString(", ")
+                        appointments.joinToString(",\n")
                     )
                 }
             }
@@ -113,6 +129,7 @@ class Bot(token: String, val locale: Locale, val dev: ChatId, val owner: ChatId)
     }
 
     private suspend fun processCallback(cb: DataCallbackQuery) {
+        log.info(cb.data)
         val (source, data) = cb.data.split(":", limit = 2)
         when (source) {
             "empty" -> {
@@ -147,12 +164,22 @@ class Bot(token: String, val locale: Locale, val dev: ChatId, val owner: ChatId)
                         this.bot.editMessageText(
                             cb.message!!.chat.id, cb.message!!
                                 .messageId,
-                            "Запись добавлена ${h}:${m.toString().padStart(2, '0')} ${add
-                                !!.dayOfMonth}.${add!!.month}.${add!!.year}"
+                            "Запись добавлена ${h}:${m.toString().padStart(2, '0')} ${
+                                add
+                                !!.dayOfMonth
+                            }.${add!!.month}.${add!!.year}"
                         )
-                        appointments.add(LocalDateTime.of(
-                            add!!.year, add!!.month, add!!.dayOfMonth, h,
-                            m))
+//                        appointments.add(LocalDateTime.of(
+//                            add!!.year, add!!.month, add!!.dayOfMonth, h,
+//                            m))
+                        appointments.add(
+                            Appointment(
+                                LocalDateTime.of(
+                                    add!!.year, add!!.month, add!!.dayOfMonth, h,
+                                    m
+                                ), cb.user.id
+                            )
+                        )
                         this.bot.editMessageReplyMarkup(
                             cb.message!!.chat.id, cb.message!!
                                 .messageId, replyMarkup = null
@@ -196,6 +223,12 @@ class Bot(token: String, val locale: Locale, val dev: ChatId, val owner: ChatId)
                         log.warn("Invalid calendar action: $action")
                     }
                 }
+            }
+
+            "signup" -> {
+                val appointment = restore<Appointment>(data)
+                log.info(appointment.toString())
+                bot.answerCallbackQuery(cb.id, "HUI")
             }
 
             else -> {
@@ -296,6 +329,42 @@ class Bot(token: String, val locale: Locale, val dev: ChatId, val owner: ChatId)
             this.add(rb.row)
             ++rowCount
         }
+    }
+
+    private fun getInlineAvailableAppointmentsMarkup(chatId: Long): InlineKeyboardMarkup {
+        val mb = MatrixBuilder<InlineKeyboardButton>()
+        mb.addAvailableAppointments(chatId)
+        return InlineKeyboardMarkup(mb.matrix)
+    }
+
+    private fun MatrixBuilder<InlineKeyboardButton>.addAvailableAppointments(chatId: Long) {
+        val temp = 100
+        for (a in appointments.sortedWith(compareBy({ it.date }, { it.time }))) {
+            if (a.client == null) {
+                val rb = RowBuilder<InlineKeyboardButton>()
+                val d = a.date
+                val t = a.time
+                val label = "$d $t"
+                val data = "signup:${a.toCallbackString()}:id=${chatId}"
+                val btn = dataInlineButton(label, data)
+                log.info(btn.toString())
+
+                rb + btn
+
+
+                this.add(rb.row)
+            }
+        }
+        log.info(this.matrix.toString())
+    }
+
+    fun ArrayList<Appointment>.hasAvailable(): Boolean {
+        for (e in this) {
+            if (e.client == null) {
+                return true
+            }
+        }
+        return false
     }
 }
 
