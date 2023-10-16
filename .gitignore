@@ -41,4 +41,5 @@ bin/
 ### Mac OS ###
 .DS_Store
 
-src/**/scroogemcfawk/manicurebot/config.json
+src/**/config.json
+src/**/locale_ru.json
