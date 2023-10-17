@@ -14,7 +14,7 @@ fun getInlineCalendarMarkup(ym: YearMonth, locale: Locale): InlineKeyboardMarkup
 
     mb.addMonthRow(ym)
     mb.addDayOfWeekRow(locale)
-    mb.addMonthLayout(ym)
+    mb.addMonthLayout(ym, locale)
 
     return InlineKeyboardMarkup(mb.matrix)
 }
@@ -49,7 +49,7 @@ private fun MatrixBuilder<InlineKeyboardButton>.addDayOfWeekRow(locale: Locale) 
     )
 }
 
-private fun MatrixBuilder<InlineKeyboardButton>.addMonthLayout(ym: YearMonth) {
+private fun MatrixBuilder<InlineKeyboardButton>.addMonthLayout(ym: YearMonth, locale: Locale) {
     val firstDMY = LocalDate.of(ym.year, ym.month, 1)
     val firstDOW = firstDMY.dayOfWeek
     val lastDMY = firstDMY.plusMonths(1).minusDays(1).dayOfMonth
@@ -64,7 +64,7 @@ private fun MatrixBuilder<InlineKeyboardButton>.addMonthLayout(ym: YearMonth) {
             if (day in 1..lastDMY) {
                 rb.add(
                     dataInlineButton(
-                        "$day", "add:select:year=${ym.year}:month=${ym.month}:day=$day"
+                        "$day", "${locale.addCommand}:select:year=${ym.year}:month=${ym.month}:day=$day"
                     )
                 )
             } else {

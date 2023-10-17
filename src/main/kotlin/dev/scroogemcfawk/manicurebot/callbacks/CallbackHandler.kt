@@ -8,9 +8,11 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
 import dev.inmo.tgbotapi.extensions.utils.extensions.raw.message
 import dev.inmo.tgbotapi.types.ChatId
 import dev.inmo.tgbotapi.types.queries.callback.DataCallbackQuery
+import dev.inmo.tgbotapi.utils.RiskFeature
 import dev.scroogemcfawk.manicurebot.config.Config
 import dev.scroogemcfawk.manicurebot.config.Locale
 import dev.scroogemcfawk.manicurebot.domain.Appointment
+import dev.scroogemcfawk.manicurebot.domain.User
 import dev.scroogemcfawk.manicurebot.domain.isStillAvailable
 import dev.scroogemcfawk.manicurebot.domain.occupy
 import dev.scroogemcfawk.manicurebot.keyboards.getInlineCalendarMarkup
@@ -21,21 +23,27 @@ import org.slf4j.LoggerFactory
 import java.time.*
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import java.util.concurrent.TimeUnit
 
 private val log = LoggerFactory.getLogger("CallbackHandler.kt")
 
 
 @Suppress("SpellCheckingInspection")
 class CallbackHandler(
-    private val ctx: BehaviourContext, private val config: Config, private val locale: Locale,
-    private val
-    appointments: ArrayList<Appointment>,
+    private val ctx: BehaviourContext,
+    private val config: Config,
+    private val locale: Locale,
+    private val appointments: ArrayList<Appointment>,
+    private val userChats: HashMap<Long, User>
 ) {
 
     private val bot = ctx.bot
     private val scope = ctx.scope
     private val manager = config.manager
+    private val notifyBeforeHours = config.notifyClientBeforeAppointmentInHours
 
+
+    // (',:-|)
     private var add: LocalDate? = null
 
     private val dateFormat = DateTimeFormatter.ofPattern(locale.dateFormat)
@@ -48,156 +56,182 @@ class CallbackHandler(
     }
 
     private suspend fun answerInvalid(cb: DataCallbackQuery) {
-        bot.answerCallbackQuery(cb, "Invalid callback.")
+        bot.answerCallbackQuery(cb, locale.cbInvalidCallbackNotificationMessage)
     }
 
-    private suspend fun notifyUser(id: Long, appointment: Appointment) {
-        val dif = ChronoUnit.MILLIS.between(LocalDateTime.now(), appointment.datetime)
-        if (dif >= 80_000) {
-            log.info("Suspended call on ${appointment.datetime} in ${dif - 60000}")
-            delay(dif - 60_000)
+    private suspend fun remindUser(id: Long, appointment: Appointment) {
+        val dif = ChronoUnit.HOURS.between(LocalDateTime.now(), appointment.datetime)
+        if (dif >= notifyBeforeHours) {
+            (dif - TimeUnit.HOURS.toMillis(notifyBeforeHours.toLong())).run {
+                log.info("Suspended notification for ${appointment.datetime} in $this")
+                delay(this)
+            }
             bot.send(
-                ChatId(id), "Вы записаны на ${appointment.datetime.format(dateTimeFormat)},\n" +
-                        "по адресу Ленина 151/1 и дт и тп"
+                ChatId(id), locale.remindUserMessageTemplate
+                    .replace("\$1", appointment.datetime.format(dateTimeFormat))
+                    .replace("\$2", locale.address)
             )
         }
     }
 
-    suspend fun processCallback(cb: DataCallbackQuery) {
-        log.info(cb.data)
-        val (source, data) = cb.data.split(":", limit = 2)
-        when (source) {
-            "empty" -> {
-                answerEmpty(cb)
+    @OptIn(RiskFeature::class)
+    @Suppress("LocalVariableName")
+    private suspend fun processAdd(cb: DataCallbackQuery, data: String) {
+        val (action, value) = data.split(":", limit = 2)
+        when (action) {
+            "select" -> {
+                val (ys, ms, ds) = value.split(":")
+                val y = ys.split("=")[1].toInt()
+                val m = Month.valueOf(ms.split("=")[1])
+                val d = ds.split("=")[1].toInt()
+                this.bot.answerCallbackQuery(cb, "")
+                add = LocalDate.of(y, m, d)
+                this.bot.editMessageText(
+                    cb.message!!.chat.id,
+                    cb.message!!.messageId,
+                    locale.cbAddSelectTimePromptMessage
+                )
+                this.bot.editMessageReplyMarkup(
+                    cb.message!!.chat.id,
+                    cb.message!!.messageId,
+                    replyMarkup = getInlineClockMarkup()
+                )
             }
 
-            "add" -> {
-                val (action, value) = data.split(":", limit = 2)
-                when (action) {
-                    "select" -> {
-                        val (ys, ms, ds) = value.split(":")
-                        val y = ys.split("=")[1].toInt()
-                        val m = Month.valueOf(ms.split("=")[1])
-                        val d = ds.split("=")[1].toInt()
-                        this.bot.answerCallbackQuery(cb, "")
-                        add = LocalDate.of(y, m, d)
-                        this.bot.editMessageText(
-                            cb.message!!.chat.id, cb.message!!.messageId, "Select time:"
-                        )
-                        this.bot.editMessageReplyMarkup(
-                            cb.message!!.chat.id,
-                            cb.message!!.messageId,
-                            replyMarkup = getInlineClockMarkup()
-                        )
-                    }
-
-                    "time" -> {
-                        val (hs, ms) = value.split(":")
-                        val h = hs.split("=")[1].toInt()
-                        val m = ms.split("=")[1].toInt()
-                        this.bot.answerCallbackQuery(cb, "")
-                        this.bot.editMessageText(
-                            cb.message!!.chat.id,
-                            cb.message!!.messageId,
-                            "Запись добавлена ${h}:${m.toString().padStart(2, '0')} ${
-                                add!!.dayOfMonth
-                            }.${add!!.month}.${add!!.year}"
-                        )
-                        appointments.add(
-                            Appointment(
-                                LocalDateTime.of(
-                                    add!!.year, add!!.month, add!!.dayOfMonth, h, m
-                                ), cb.user.id.chatId
-                            )
-                        )
-                        this.bot.editMessageReplyMarkup(
-                            cb.message!!.chat.id, cb.message!!.messageId, replyMarkup = null
-                        )
-                    }
-
-                    else -> {
-                        answerInvalid(cb)
-                        log.warn("Invalid signup action: $action")
-                    }
-                }
-            }
-
-            "calendar" -> {
-                val (action, value) = data.split(":", limit = 2)
-                val (yearArg, monthArg) = value.split(":", limit = 2)
-
-                val year = Year.of(yearArg.split("=")[1].toInt())
-                val month = Month.valueOf(monthArg.split("=")[1])
-                when (action) {
-                    "prevMonth" -> {
-                        val prev = YearMonth.of(year.value, month).minusMonths(1)
-                        this.bot.answerCallbackQuery(cb, "Switching to $prev")
-                        this.bot.editMessageReplyMarkup(
-                            cb.message!!.chat.id,
-                            cb.message!!.messageId,
-                            replyMarkup = getInlineCalendarMarkup(prev, locale)
-                        )
-                    }
-
-                    "nextMonth" -> {
-                        val next = YearMonth.of(year.value, month).plusMonths(1)
-                        this.bot.answerCallbackQuery(cb, "Switching to $next")
-                        this.bot.editMessageReplyMarkup(
-                            cb.message!!.chat.id,
-                            cb.message!!.messageId,
-                            replyMarkup = getInlineCalendarMarkup(next, locale)
-                        )
-                    }
-
-                    else -> {
-                        answerInvalid(cb)
-                        log.warn("Invalid calendar action: $action")
-                    }
-                }
-            }
-
-            "signup" -> {
-                try {
-                    val (idPair, app) = data.split(":", limit = 2)
-
-                    val id = restore<Long>(idPair)!!
-                    val appointment = restore<Appointment>(app)!!
-
-                    if (appointments.isStillAvailable(appointment)) {
-                        appointments.occupy(appointment, id)
-                        scope.launch {
-                            notifyUser(id, appointment)
-                        }
-                        answerEmpty(cb)
-                        bot.editMessageText(
-                            cb.message!!.chat,
-                            cb.message!!.messageId,
-                            "Вы записаны на ${appointment.datetime.format(dateTimeFormat)}",
-                            replyMarkup =
-                            null
-                        )
-                        bot.send(
-                            manager,
-                            "На ${appointment.datetime.format(dateFormat)} Записан чубрик " + cb.user.username!!.username
-                        )
-                    } else {
-                        bot.answerCallbackQuery(cb.id, "Huinee")
-                    }
-                } catch (e: Exception) {
-                    println(e.message)
-                }
+            "time" -> {
+                // TODO: double check if this shit doesn't cause bugs
+                val (hs, ms) = value.split(":")
+                val Y = add!!.year
+                val M = add!!.month
+                val D = add!!.dayOfMonth
+                val dateTime = restore<LocalDateTime>("Y=$Y:M=$M:D=$D:$hs:$ms")
+                this.bot.answerCallbackQuery(cb, "")
+                this.bot.editMessageText(
+                    cb.message!!.chat.id,
+                    cb.message!!.messageId,
+                    locale.cbAddTimeAppointmentCreatedTemplate.replace(
+                        "\$1",
+                        dateTime!!.format(dateTimeFormat)
+                    )
+                )
+                appointments.add(Appointment(dateTime))
+                this.bot.editMessageReplyMarkup(
+                    cb.message!!.chat.id, cb.message!!.messageId, replyMarkup = null
+                )
             }
 
             else -> {
                 answerInvalid(cb)
-                log.warn("Invalid source: $source")
+                log.warn("Invalid signup action: $action")
             }
+        }
+    }
+
+    @OptIn(RiskFeature::class)
+    private suspend fun processCalendar(cb: DataCallbackQuery, data: String) {
+        val (action, value) = data.split(":", limit = 2)
+        val (yearArg, monthArg) = value.split(":", limit = 2)
+
+        val year = Year.of(yearArg.split("=")[1].toInt())
+        val month = Month.valueOf(monthArg.split("=")[1])
+        when (action) {
+            "prevMonth" -> {
+                val prev = YearMonth.of(year.value, month).minusMonths(1)
+                this.bot.answerCallbackQuery(cb, "${locale.cbCalendarSwitchingNotificationMessage} $prev")
+                this.bot.editMessageReplyMarkup(
+                    cb.message!!.chat.id,
+                    cb.message!!.messageId,
+                    replyMarkup = getInlineCalendarMarkup(prev, locale)
+                )
+            }
+
+            "nextMonth" -> {
+                val next = YearMonth.of(year.value, month).plusMonths(1)
+                this.bot.answerCallbackQuery(cb, "${locale.cbCalendarSwitchingNotificationMessage} $next")
+                this.bot.editMessageReplyMarkup(
+                    cb.message!!.chat.id,
+                    cb.message!!.messageId,
+                    replyMarkup = getInlineCalendarMarkup(next, locale)
+                )
+            }
+
+            else -> {
+                answerInvalid(cb)
+                log.warn("Invalid calendar action: $action")
+            }
+        }
+    }
+
+    @OptIn(RiskFeature::class)
+    private suspend fun processAppointment(cb: DataCallbackQuery, data: String) {
+        val (idPair, app) = data.split(":", limit = 2)
+
+        val id = restore<Long>(idPair)!!
+        val appointment = restore<Appointment>(app)!!
+
+        if (!appointments.isStillAvailable(appointment)) {
+            bot.editMessageText(
+                cb.message!!.chat,
+                cb.message!!.messageId,
+                locale.appointmentNotAlreadyTakenMessage,
+                replyMarkup = null
+            )
+            answerEmpty(cb)
+            return
+        }
+
+        appointments.occupy(appointment, id)
+        scope.launch {
+            remindUser(id, appointment)
+        }
+        answerEmpty(cb)
+        bot.editMessageText(
+            cb.message!!.chat,
+            cb.message!!.messageId,
+            locale.cbAppointmentCompleteMessage
+                .replace("\$1", appointment.datetime.format(dateTimeFormat)),
+            replyMarkup = null
+        )
+        bot.send(
+            manager,
+            locale.cbAppointmentCompleteManagerNotificationMessage
+                .replace("\$1", appointment.datetime.format(dateFormat))
+                .replace("\$2", userChats[cb.user.id.chatId]!!.toString())
+        )
+    }
+
+    suspend fun processCallback(cb: DataCallbackQuery) {
+        try {
+            val (source, data) = cb.data.split(":", limit = 2)
+            when (source) {
+                "empty" -> {
+                    answerEmpty(cb)
+                }
+
+                locale.addCommand -> {
+                    processAdd(cb, data)
+                }
+
+                "calendar" -> {
+                    processCalendar(cb, data)
+                }
+
+                locale.appointmentCommand -> {
+                    processAppointment(cb, data)
+                }
+
+                else -> {
+                    answerInvalid(cb)
+                    log.warn("Invalid source: $source")
+                }
+            }
+        } catch (e: Exception) {
+            log.error("Faild to process callback $cb")
         }
     }
 }
 
-private fun HashMap<String, String>.fromCallbackArgs(args: List<String>): HashMap<String,
-        String> {
+private fun HashMap<String, String>.fromCallbackArgs(args: List<String>): HashMap<String, String> {
     for (p in args) {
         val (k, v) = p.split("=")
         this[k] = v
@@ -206,23 +240,27 @@ private fun HashMap<String, String>.fromCallbackArgs(args: List<String>): HashMa
 }
 
 private inline fun <reified T: Any?> restore(s: String): T? {
+    val args = s.split(":")
+    val map = HashMap<String, String>().fromCallbackArgs(args)
+
     when (T::class) {
         Long::class -> {
             return s.split("=")[1].toLong() as T
         }
 
         Appointment::class -> {
-            val args = s.split(":")
-            val map = HashMap<String, String>().fromCallbackArgs(args)
-            val ld =
-                LocalDate.of(map["Y"]!!.toInt(), Month.valueOf(map["M"]!!), map["D"]!!.toInt())
-            val lt = LocalTime.of(map["h"]!!.toInt(), map["m"]!!.toInt())
+
+            val ld = restoreLocalDate(map)
+            val lt = restoreLocalTime(map)
             val id = map["id"]!!
             return Appointment(
                 LocalDateTime.of(ld, lt),
                 if (id == "null") null else id.toLong()
-            )
-                    as T
+            ) as T
+        }
+
+        LocalDateTime::class -> {
+            return LocalDateTime.of(restoreLocalDate(map), restoreLocalTime(map)) as T
         }
 
         else -> {
@@ -230,4 +268,12 @@ private inline fun <reified T: Any?> restore(s: String): T? {
             return null
         }
     }
+}
+
+private fun restoreLocalDate(map: HashMap<String, String>): LocalDate {
+    return LocalDate.of(map["Y"]!!.toInt(), Month.valueOf(map["M"]!!), map["D"]!!.toInt())
+}
+
+private fun restoreLocalTime(map: HashMap<String, String>): LocalTime {
+    return LocalTime.of(map["h"]!!.toInt(), map["m"]!!.toInt())
 }

@@ -4,23 +4,58 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Locale(
-    val dateFormat: String,
-    val dateTimeFormat: String,
+    // default values as fallback
+    val dateFormat: String = "yyyy.MM.dd",
+    val dateTimeFormat: String = "yyyy.MM.dd HH:mm",
 
-    val registerUserNamePromptMessage: String,
-    val registerUserPhonePromptMessage: String,
-    val registerSuccessfulRegistrationMessage: String,
-    val registerUserAlreadyExistsMessage: String,
+    val startCommand: String = "start",
+    val helpCommand: String = "help",
+    val registerCommand: String = "register",
+    val idCommand: String = "_id",
+    val appointmentCommand: String = "app",
+    val addCommand: String = "add",
+    val listCommand: String = "list",
+    val notifyCommand: String = "notify",
 
-    val mondayShort: String,
-    val tuesdayShort: String,
-    val wednesdayShort: String,
-    val thursdayShort: String,
-    val fridayShort: String,
-    val saturdayShort: String,
-    val sundayShort: String,
+    val registerUserNamePromptMessage: String = "Please, enter your name:",
+    val registerUserPhonePromptMessage: String = "Please, enter your phone number:",
+    val registerSuccessfulRegistrationMessageTemplate: String = "Done. You can now signup for appointments.",
+    val registerUserAlreadyExistsMessage: String = "You are already registered.",
 
-    val startMessage: String,
-    val helpMessage: String,
-    val unknownCommand: String,
+    val appointmentNotRegisteredMessageTemplate: String = "You are not registered. Please register using /$1 command.",
+    val appointmentNotAlreadyTakenMessage: String = "Appointment is not available.",
+    val appointmentAppointmentsNotAvailableMessage: String = "Sorry, appointments are not available.",
+    val appointmentAlreadyHaveAppointmentMessage: String = "Sorry, you already have an appointment: ",
+    val appointmentChooseAppointmentMessage: String = "Please, choose an appointment: ",
+
+    val addSelectDayPromptMessage: String = "Please, select a day: ",
+
+    val notifyNotificationMessagePromptMessage: String = "Please, enter your notification message: ",
+
+    val cbInvalidCallbackNotificationMessage: String = "Invalid callback.",
+
+    val cbAddSelectTimePromptMessage: String = "Select time:",
+    val cbAddTimeAppointmentCreatedTemplate: String = "Created appointment $1.",
+
+    val cbCalendarSwitchingNotificationMessage: String = "Switching to",
+
+    val cbAppointmentCompleteMessage: String = "You have an appointment on $1",
+    val cbAppointmentCompleteManagerNotificationMessage: String = "You have and appointment on $1 with $2",
+
+    val remindUserMessageTemplate: String = "You have an appointment on $1 at $2.",
+
+    val address: String = "Planet Earth",
+
+
+    val mondayShort: String = "Mon",
+    val tuesdayShort: String = "Tue",
+    val wednesdayShort: String = "Wed",
+    val thursdayShort: String = "Thu",
+    val fridayShort: String = "Fri",
+    val saturdayShort: String = "Sat",
+    val sundayShort: String = "Sun",
+
+    val startMessage: String = "If you see this message, please text @scroogemcfawk asap.",
+    val helpMessage: String = "If you see this message, please text @scroogemcfawk asap.",
+    val unknownCommand: String = "If you see this message, please text @scroogemcfawk asap.",
 )

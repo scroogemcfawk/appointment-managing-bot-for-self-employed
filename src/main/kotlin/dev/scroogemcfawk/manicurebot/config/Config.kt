@@ -9,4 +9,5 @@ data class Config(
     val locale: String,
     val dev: ChatId,
     val manager: ChatId,
+    val notifyClientBeforeAppointmentInHours: Int = 24
 )

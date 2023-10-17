@@ -6,7 +6,7 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviourWithLongPoll
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onDataCallbackQuery
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onUnhandledCommand
-import dev.inmo.tgbotapi.types.ChatId
+import dev.inmo.tgbotapi.utils.PreviewFeature
 import dev.scroogemcfawk.manicurebot.callbacks.CallbackHandler
 import dev.scroogemcfawk.manicurebot.commands.CommandHandler
 import dev.scroogemcfawk.manicurebot.config.Config
@@ -26,20 +26,14 @@ import java.time.Month
 class Bot(private val config: Config) {
 
     private val locale = Json.decodeFromString(Locale.serializer(), File(config.locale).readText())
-    private val dev = config.dev
-    private val owner = config.manager
     private val bot = telegramBot(config.token)
     private val scope = CoroutineScope(Dispatchers.Default)
     private val log = LoggerFactory.getLogger(Bot::class.java)
-
-    private val managers = ArrayList<ChatId>()
 
     private val appointments = ArrayList<Appointment>()
     private val userChats = HashMap<Long, User>()
 
     init {
-        managers.add(dev)
-        managers.add(owner)
         mock()
     }
 
@@ -62,67 +56,70 @@ class Bot(private val config: Config) {
         appointments.add(Appointment(getLDTAfterMinutes(4), null))
     }
 
-    suspend fun run(): Job {
-        return bot.buildBehaviourWithLongPolling(scope) {
-            val commandHandler = CommandHandler(this, config, locale)
-            val callbackHandler = CallbackHandler(this, config, locale, appointments)
-
-            //=================================== COMMON ===========================================
-
-            onCommand("start", requireOnlyCommandInMessage = true) { msg ->
-                commandHandler.start(msg)
-            }
-
-            onCommand("help", requireOnlyCommandInMessage = true) { msg ->
-                commandHandler.help(msg)
-            }
-
-            onCommand("register", requireOnlyCommandInMessage = true) { msg ->
-                commandHandler.register(msg, userChats)
-            }
-
-            onCommand("_id", requireOnlyCommandInMessage = true) { msg ->
-                commandHandler.id(msg, dev)
-            }
-
-            onUnhandledCommand { msg ->
-                commandHandler.unhandled(msg, locale.unknownCommand)
-            }
-
-            //=============== CLIENT COMMANDS ==============================
-
-            onCommand("signup", requireOnlyCommandInMessage = true) { msg ->
-                commandHandler.signup(msg, appointments)
-            }
-
-            //=============== MANAGER COMMANDS ==============================
-
-            onCommand("add", requireOnlyCommandInMessage = true) { msg ->
-                commandHandler.add(msg)
-            }
-
-            onCommand("list", requireOnlyCommandInMessage = true) { msg ->
-                commandHandler.list(msg, appointments)
-            }
-
-            onCommand("notify", requireOnlyCommandInMessage = true) { msg ->
-                commandHandler.notify(msg, userChats)
-            }
-
-            //=============== CALLBACKS ==============================
-
-            onDataCallbackQuery { cb ->
-                callbackHandler.processCallback(cb)
-            }
-
-            logBotRunningMessage()
-        }
-    }
-
     private suspend fun logBotRunningMessage() {
         val me = bot.getMe()
         log.info(
-            "Bot(id=${me.id.chatId}, ${me.username?.username}, ${me.firstName}) is running."
+            "Bot(${me.id.chatId}, ${me.username?.username}, ${me.firstName}) is running."
         )
+    }
+
+    @OptIn(PreviewFeature::class)
+    suspend fun run(): Job = bot.buildBehaviourWithLongPolling(scope) {
+        val commandHandler = CommandHandler(this, config, locale, userChats)
+        val callbackHandler = CallbackHandler(this, config, locale, appointments, userChats)
+
+        //=================================== COMMON ===========================================
+
+        onCommand(locale.startCommand, requireOnlyCommandInMessage = true) { msg ->
+            commandHandler.start(msg)
+        }
+
+        onCommand(locale.helpCommand, requireOnlyCommandInMessage = true) { msg ->
+            commandHandler.help(msg)
+        }
+
+        onCommand(locale.registerCommand, requireOnlyCommandInMessage = true) { msg ->
+            commandHandler.register(msg, userChats)
+        }
+
+        onCommand(locale.idCommand, requireOnlyCommandInMessage = true) { msg ->
+            commandHandler.id(msg)
+        }
+
+        onUnhandledCommand { msg ->
+            commandHandler.unhandled(msg)
+        }
+
+        //=============== CLIENT COMMANDS ==============================
+
+        onCommand(locale.appointmentCommand, requireOnlyCommandInMessage = true) { msg ->
+            try {
+                commandHandler.appointment(msg, appointments)
+            } catch (e: Exception) {
+                log.warn(e.message)
+            }
+        }
+
+        //=============== MANAGER COMMANDS ==============================
+
+        onCommand(locale.addCommand, requireOnlyCommandInMessage = true) { msg ->
+            commandHandler.add(msg)
+        }
+
+        onCommand(locale.listCommand, requireOnlyCommandInMessage = true) { msg ->
+            commandHandler.list(msg, appointments)
+        }
+
+        onCommand(locale.notifyCommand, requireOnlyCommandInMessage = true) { msg ->
+            commandHandler.notify(msg, userChats)
+        }
+
+        //=============== CALLBACKS ==============================
+
+        onDataCallbackQuery { cb ->
+            callbackHandler.processCallback(cb)
+        }
+
+        logBotRunningMessage()
     }
 }
