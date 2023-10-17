@@ -12,6 +12,7 @@ import dev.scroogemcfawk.manicurebot.commands.CommandHandler
 import dev.scroogemcfawk.manicurebot.config.Config
 import dev.scroogemcfawk.manicurebot.config.Locale
 import dev.scroogemcfawk.manicurebot.domain.Appointment
+import dev.scroogemcfawk.manicurebot.domain.AppointmentList
 import dev.scroogemcfawk.manicurebot.domain.User
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -30,7 +31,7 @@ class Bot(private val config: Config) {
     private val scope = CoroutineScope(Dispatchers.Default)
     private val log = LoggerFactory.getLogger(Bot::class.java)
 
-    private val appointments = ArrayList<Appointment>()
+    private val appointments = AppointmentList(locale.dateTimeFormat)
     private val userChats = HashMap<Long, User>()
 
     init {
@@ -45,15 +46,15 @@ class Bot(private val config: Config) {
             val ltin2m = LocalTime.of(dtin2m.hour, dtin2m.minute)
             return LocalDateTime.of(ldin2m, ltin2m)
         }
-        appointments.add(Appointment(LocalDateTime.of(2023, Month.OCTOBER, 10, 11, 30), null))
-        appointments.add(Appointment(LocalDateTime.of(2023, Month.OCTOBER, 15, 15, 30), null))
-        appointments.add(Appointment(LocalDateTime.of(2023, Month.OCTOBER, 16, 12, 30), null))
-        appointments.add(Appointment(LocalDateTime.of(2023, Month.OCTOBER, 23, 17, 45), null))
+        appointments.add(Appointment(LocalDateTime.of(2023, Month.OCTOBER, 18, 11, 30), null))
+        appointments.add(Appointment(LocalDateTime.of(2023, Month.OCTOBER, 19, 12, 30), null))
+        appointments.add(Appointment(LocalDateTime.of(2023, Month.OCTOBER, 20, 13, 30), null))
+//        appointments.add(Appointment(LocalDateTime.of(2023, Month.OCTOBER, 23, 17, 45), null))
 
-        appointments.add(Appointment(getLDTAfterMinutes(1), null))
-        appointments.add(Appointment(getLDTAfterMinutes(2), null))
-        appointments.add(Appointment(getLDTAfterMinutes(3), null))
-        appointments.add(Appointment(getLDTAfterMinutes(4), null))
+//        appointments.add(Appointment(getLDTAfterMinutes(1), null))
+//        appointments.add(Appointment(getLDTAfterMinutes(2), null))
+//        appointments.add(Appointment(getLDTAfterMinutes(3), null))
+//        appointments.add(Appointment(getLDTAfterMinutes(4), null))
     }
 
     private suspend fun logBotRunningMessage() {
@@ -66,7 +67,8 @@ class Bot(private val config: Config) {
     @OptIn(PreviewFeature::class)
     suspend fun run(): Job = bot.buildBehaviourWithLongPolling(scope) {
         val commandHandler = CommandHandler(this, config, locale, userChats)
-        val callbackHandler = CallbackHandler(this, config, locale, appointments, userChats)
+        // TODO: refactor this shit to local catch with ctx.waitCallbackQueries<DataCallbackQuery>()
+        val callbackHandler = CallbackHandler(this, config, locale, userChats, appointments)
 
         //=================================== COMMON ===========================================
 
@@ -93,11 +95,15 @@ class Bot(private val config: Config) {
         //=============== CLIENT COMMANDS ==============================
 
         onCommand(locale.appointmentCommand, requireOnlyCommandInMessage = true) { msg ->
-            try {
-                commandHandler.appointment(msg, appointments)
-            } catch (e: Exception) {
-                log.warn(e.message)
-            }
+            commandHandler.appointment(msg, appointments)
+        }
+
+        onCommand(locale.rescheduleCommand, requireOnlyCommandInMessage = true) {msg->
+            commandHandler.reschedule(msg, appointments)
+        }
+
+        onCommand(locale.cancelCommand, requireOnlyCommandInMessage = true) {msg->
+            commandHandler.cancel(msg, appointments)
         }
 
         //=============== MANAGER COMMANDS ==============================
@@ -117,7 +123,7 @@ class Bot(private val config: Config) {
         //=============== CALLBACKS ==============================
 
         onDataCallbackQuery { cb ->
-            callbackHandler.processCallback(cb)
+            callbackHandler.processCallback(cb, appointments)
         }
 
         logBotRunningMessage()

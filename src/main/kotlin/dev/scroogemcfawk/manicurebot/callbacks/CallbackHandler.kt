@@ -1,6 +1,7 @@
 package dev.scroogemcfawk.manicurebot.callbacks
 
 import dev.inmo.tgbotapi.extensions.api.answers.answerCallbackQuery
+import dev.inmo.tgbotapi.extensions.api.delete
 import dev.inmo.tgbotapi.extensions.api.edit.reply_markup.editMessageReplyMarkup
 import dev.inmo.tgbotapi.extensions.api.edit.text.editMessageText
 import dev.inmo.tgbotapi.extensions.api.send.send
@@ -11,10 +12,7 @@ import dev.inmo.tgbotapi.types.queries.callback.DataCallbackQuery
 import dev.inmo.tgbotapi.utils.RiskFeature
 import dev.scroogemcfawk.manicurebot.config.Config
 import dev.scroogemcfawk.manicurebot.config.Locale
-import dev.scroogemcfawk.manicurebot.domain.Appointment
-import dev.scroogemcfawk.manicurebot.domain.User
-import dev.scroogemcfawk.manicurebot.domain.isStillAvailable
-import dev.scroogemcfawk.manicurebot.domain.occupy
+import dev.scroogemcfawk.manicurebot.domain.*
 import dev.scroogemcfawk.manicurebot.keyboards.getInlineCalendarMarkup
 import dev.scroogemcfawk.manicurebot.keyboards.getInlineClockMarkup
 import kotlinx.coroutines.delay
@@ -25,7 +23,7 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 
-private val log = LoggerFactory.getLogger("CallbackHandler.kt")
+val log = LoggerFactory.getLogger("CallbackHandler.kt")
 
 
 @Suppress("SpellCheckingInspection")
@@ -33,8 +31,8 @@ class CallbackHandler(
     private val ctx: BehaviourContext,
     private val config: Config,
     private val locale: Locale,
-    private val appointments: ArrayList<Appointment>,
-    private val userChats: HashMap<Long, User>
+    private val userChats: HashMap<Long, User>,
+    private val appointments: AppointmentList
 ) {
 
     private val bot = ctx.bot
@@ -62,21 +60,26 @@ class CallbackHandler(
     private suspend fun remindUser(id: Long, appointment: Appointment) {
         val dif = ChronoUnit.HOURS.between(LocalDateTime.now(), appointment.datetime)
         if (dif >= notifyBeforeHours) {
-            (dif - TimeUnit.HOURS.toMillis(notifyBeforeHours.toLong())).run {
-                log.info("Suspended notification for ${appointment.datetime} in $this")
-                delay(this)
-            }
+            val timeout = TimeUnit.HOURS.toMillis(dif - notifyBeforeHours.toLong())
+            log.debug(
+                "Suspended notification for {} in {} seconds",
+                appointment.datetime,
+                timeout / 1000
+            )
+            delay(timeout)
             bot.send(
                 ChatId(id), locale.remindUserMessageTemplate
                     .replace("\$1", appointment.datetime.format(dateTimeFormat))
                     .replace("\$2", locale.address)
             )
+        } else {
+            log.debug("Timeout is too short.")
         }
     }
 
     @OptIn(RiskFeature::class)
     @Suppress("LocalVariableName")
-    private suspend fun processAdd(cb: DataCallbackQuery, data: String) {
+    private suspend fun processAdd(cb: DataCallbackQuery, data: String, appointments: AppointmentList) {
         val (action, value) = data.split(":", limit = 2)
         when (action) {
             "select" -> {
@@ -163,13 +166,13 @@ class CallbackHandler(
     }
 
     @OptIn(RiskFeature::class)
-    private suspend fun processAppointment(cb: DataCallbackQuery, data: String) {
+    private suspend fun processAppointment(cb: DataCallbackQuery, data: String, appointments: AppointmentList) {
         val (idPair, app) = data.split(":", limit = 2)
 
         val id = restore<Long>(idPair)!!
         val appointment = restore<Appointment>(app)!!
 
-        if (!appointments.isStillAvailable(appointment)) {
+        if (!appointments.isAvailable(appointment)) {
             bot.editMessageText(
                 cb.message!!.chat,
                 cb.message!!.messageId,
@@ -180,7 +183,7 @@ class CallbackHandler(
             return
         }
 
-        appointments.occupy(appointment, id)
+        appointments.assignClient(appointment, id)
         scope.launch {
             remindUser(id, appointment)
         }
@@ -200,7 +203,7 @@ class CallbackHandler(
         )
     }
 
-    suspend fun processCallback(cb: DataCallbackQuery) {
+    suspend fun processCallback(cb: DataCallbackQuery, appointments: AppointmentList) {
         try {
             val (source, data) = cb.data.split(":", limit = 2)
             when (source) {
@@ -209,15 +212,23 @@ class CallbackHandler(
                 }
 
                 locale.addCommand -> {
-                    processAdd(cb, data)
+                    processAdd(cb, data, appointments)
                 }
 
                 "calendar" -> {
                     processCalendar(cb, data)
                 }
 
+                locale.cancelCommand -> {
+                    processCancel(cb, data)
+                }
+
                 locale.appointmentCommand -> {
-                    processAppointment(cb, data)
+                    processAppointment(cb, data, appointments)
+                }
+
+                "L" -> {
+                    log.debug("Ignore local callback.")
                 }
 
                 else -> {
@@ -226,12 +237,28 @@ class CallbackHandler(
                 }
             }
         } catch (e: Exception) {
-            log.error("Faild to process callback $cb")
+            log.error("Faild to process callback: ${e.message}")
+        }
+    }
+
+    @OptIn(RiskFeature::class)
+    suspend fun processCancel(cb: DataCallbackQuery, data: String) {
+        // TODO: cancell suspended notification
+        val verdct = data.split(":", limit = 2)[0]
+        answerEmpty(cb)
+        if (verdct == "yes") {
+            val appointment = data.split(":", limit = 2)[1]
+            restore<Appointment>(appointment)?.run {
+                appointments.cancel(this)
+            }
+            bot.editMessageText(cb.message!!.chat.id, cb.message!!.messageId, locale.cancelDoneMessage, replyMarkup = null)
+        } else {
+            bot.delete(cb.message!!.chat.id, cb.message!!.messageId)
         }
     }
 }
 
-private fun HashMap<String, String>.fromCallbackArgs(args: List<String>): HashMap<String, String> {
+fun HashMap<String, String>.fromCallbackArgs(args: List<String>): HashMap<String, String> {
     for (p in args) {
         val (k, v) = p.split("=")
         this[k] = v
@@ -239,7 +266,7 @@ private fun HashMap<String, String>.fromCallbackArgs(args: List<String>): HashMa
     return this
 }
 
-private inline fun <reified T: Any?> restore(s: String): T? {
+inline fun <reified T: Any?> restore(s: String): T? {
     val args = s.split(":")
     val map = HashMap<String, String>().fromCallbackArgs(args)
 
@@ -270,10 +297,10 @@ private inline fun <reified T: Any?> restore(s: String): T? {
     }
 }
 
-private fun restoreLocalDate(map: HashMap<String, String>): LocalDate {
+fun restoreLocalDate(map: HashMap<String, String>): LocalDate {
     return LocalDate.of(map["Y"]!!.toInt(), Month.valueOf(map["M"]!!), map["D"]!!.toInt())
 }
 
-private fun restoreLocalTime(map: HashMap<String, String>): LocalTime {
+fun restoreLocalTime(map: HashMap<String, String>): LocalTime {
     return LocalTime.of(map["h"]!!.toInt(), map["m"]!!.toInt())
 }

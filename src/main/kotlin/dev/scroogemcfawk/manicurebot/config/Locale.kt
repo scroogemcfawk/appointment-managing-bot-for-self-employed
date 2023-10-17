@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Locale(
     // default values as fallback
+    val isDefaultLocale: Boolean = true,
     val dateFormat: String = "yyyy.MM.dd",
     val dateTimeFormat: String = "yyyy.MM.dd HH:mm",
 
@@ -16,17 +17,28 @@ data class Locale(
     val addCommand: String = "add",
     val listCommand: String = "list",
     val notifyCommand: String = "notify",
+    val cancelCommand: String = "cancel",
+    val rescheduleCommand: String = "reschedule",
 
     val registerUserNamePromptMessage: String = "Please, enter your name:",
     val registerUserPhonePromptMessage: String = "Please, enter your phone number:",
     val registerSuccessfulRegistrationMessageTemplate: String = "Done. You can now signup for appointments.",
     val registerUserAlreadyExistsMessage: String = "You are already registered.",
 
+    val rescheduleDoneMessageTemplate: String = "Your appointment rescheduled from $1 to $2.",
+
     val appointmentNotRegisteredMessageTemplate: String = "You are not registered. Please register using /$1 command.",
     val appointmentNotAlreadyTakenMessage: String = "Appointment is not available.",
     val appointmentAppointmentsNotAvailableMessage: String = "Sorry, appointments are not available.",
     val appointmentAlreadyHaveAppointmentMessage: String = "Sorry, you already have an appointment: ",
     val appointmentChooseAppointmentMessage: String = "Please, choose an appointment: ",
+
+    val cancelNoAppointmentsFoundMessage: String = "You don't have any appointments scheduled.",
+    val cancelConfirmMessageTemplate: String = "Your appointment is on $1, are you sure you want " +
+            "to cancel it?",
+    val cancelDoneMessage: String = "Appointment canceled.",
+
+    val operationCancelledMessage: String = "Operation cancelled.",
 
     val addSelectDayPromptMessage: String = "Please, select a day: ",
 
@@ -46,6 +58,7 @@ data class Locale(
 
     val address: String = "Planet Earth",
 
+    val featureIsNotImplementedYetMessage: String = "This feature is not implemented yet.",
 
     val mondayShort: String = "Mon",
     val tuesdayShort: String = "Tue",
