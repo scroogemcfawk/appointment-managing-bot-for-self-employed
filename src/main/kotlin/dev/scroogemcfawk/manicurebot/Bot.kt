@@ -38,7 +38,7 @@ class Bot(private val config: Config) {
         mock()
     }
 
-    @Suppress("SpellCheckingInspection")
+    @Suppress("SpellCheckingInspection", "unused")
     private fun mock() {
         fun getLDTAfterMinutes(m: Int): LocalDateTime {
             val dtin2m = LocalDateTime.now().plusMinutes(m.toLong())
@@ -60,7 +60,7 @@ class Bot(private val config: Config) {
     private suspend fun logBotRunningMessage() {
         val me = bot.getMe()
         log.info(
-            "Bot(${me.id.chatId}, ${me.username?.username}, ${me.firstName}) is running."
+            "${me.username?.username} (${me.firstName}) is running."
         )
     }
 
