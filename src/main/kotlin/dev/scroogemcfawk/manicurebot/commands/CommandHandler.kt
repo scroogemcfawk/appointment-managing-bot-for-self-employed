@@ -25,10 +25,7 @@ import dev.scroogemcfawk.manicurebot.domain.Appointment
 import dev.scroogemcfawk.manicurebot.domain.AppointmentList
 import dev.scroogemcfawk.manicurebot.domain.CallbackSessions
 import dev.scroogemcfawk.manicurebot.domain.User
-import dev.scroogemcfawk.manicurebot.keyboards.getInlineAvailableAppointmentsMarkup
-import dev.scroogemcfawk.manicurebot.keyboards.getInlineCalendarMarkup
-import dev.scroogemcfawk.manicurebot.keyboards.getRescheduleMarkupInline
-import dev.scroogemcfawk.manicurebot.keyboards.getYesNoInlineMarkup
+import dev.scroogemcfawk.manicurebot.keyboards.*
 import kotlinx.coroutines.flow.first
 import org.slf4j.LoggerFactory
 import java.time.YearMonth
@@ -183,22 +180,15 @@ class CommandHandler(
 
     suspend fun cancel(msg: TextMessage, appointments: AppointmentList) {
         try {
-            if (msg.chat.id == contractor) {
-                bot.send(contractor, locale.featureIsNotImplementedYetMessage)
-                return
-            }
             if (!appointments.clientHasAppointment(msg.chat.id.chatId)) {
                 bot.send(msg.chat.id, locale.cancelNoAppointmentsFoundMessage)
                 return
             }
-            appointments.getClientAppointmentOrNull(msg.chat.id.chatId)?.run {
-                bot.send(
-                    msg.chat,
-                    locale.cancelConfirmMessageTemplate
-                        .replace("\$1", this.datetime.format(dateTimeFormat)),
-                    replyMarkup = getYesNoInlineMarkup(this)
-                )
-            } ?: log.error("Appointment not found.")
+            if (msg.chat.id == contractor) {
+                cancelAsContractor(msg, appointments)
+            } else {
+                cancelAsClient(msg, appointments)
+            }
         } catch (e: Exception) {
             log.error("Error during /${locale.cancelCommand}")
         }
@@ -293,6 +283,25 @@ class CommandHandler(
                 appointments,
                 locale
             )
+        )
+    }
+
+    private suspend fun cancelAsClient(msg: TextMessage, appointments: AppointmentList) {
+        appointments.getClientAppointmentOrNull(msg.chat.id.chatId)?.run {
+            bot.send(
+                msg.chat,
+                locale.cancelConfirmMessageTemplate
+                    .replace("\$1", this.datetime.format(dateTimeFormat)),
+                replyMarkup = getYesNoInlineMarkup(this)
+            )
+        } ?: log.error("Appointment not found.")
+    }
+
+    private suspend fun cancelAsContractor(msg: TextMessage, appointments: AppointmentList) {
+        bot.send(
+            msg.chat,
+            locale.cancelContractorChoosePromptMessage,
+            replyMarkup = getContractorCancelInline(msg.chatId, appointments, dateTimeFormat, locale)
         )
     }
 }

@@ -37,7 +37,7 @@ class CallbackHandler(
 
     private val bot = ctx.bot
     private val scope = ctx.scope
-    private val manager = config.manager
+    private val contractor = config.manager
     private val notifyBeforeHours = config.notifyClientBeforeAppointmentInHours
 
 
@@ -166,7 +166,11 @@ class CallbackHandler(
     }
 
     @OptIn(RiskFeature::class)
-    private suspend fun processAppointment(cb: DataCallbackQuery, data: String, appointments: AppointmentList) {
+    private suspend fun processAppointment(
+        cb: DataCallbackQuery,
+        data: String,
+        appointments: AppointmentList)
+    {
         val (idPair, app) = data.split(":", limit = 2)
 
         val id = restore<Long>(idPair)!!
@@ -196,11 +200,42 @@ class CallbackHandler(
             replyMarkup = null
         )
         bot.send(
-            manager,
+            contractor,
             locale.cbAppointmentCompleteManagerNotificationMessage
                 .replace("\$1", appointment.datetime.format(dateFormat))
                 .replace("\$2", userChats[cb.user.id.chatId]!!.toString())
         )
+    }
+
+    @OptIn(RiskFeature::class)
+    private suspend fun processContractorCallback(
+        cb: DataCallbackQuery,
+        cbData: String,
+        appointments: AppointmentList)
+    {
+        try {
+            val (source, data) = cbData.split(":", limit = 2)
+
+            when (source) {
+                locale.cancelCommand -> {
+                    val appointment = restore<Appointment>(data)
+                    appointments.cancel(appointment!!)
+                    bot.editMessageText(
+                        contractor,
+                        cb.message!!.messageId,
+                        locale.cancelDoneMessage,
+                        replyMarkup = null
+                    )
+                    bot.answerCallbackQuery(cb)
+                }
+
+                else -> {
+                    log.warn("Unknown contractor callback source (${source}).")
+                }
+            }
+        } catch (e: Exception) {
+            throw Exception("Exception in processContractorCallback: ${e.message}.")
+        }
     }
 
     suspend fun processCallback(cb: DataCallbackQuery, appointments: AppointmentList) {
@@ -209,6 +244,11 @@ class CallbackHandler(
             when (source) {
                 "empty" -> {
                     answerEmpty(cb)
+                }
+
+                // Contractor-specific callbacks
+                "c" -> {
+                    processContractorCallback(cb, data, appointments)
                 }
 
                 locale.addCommand -> {
