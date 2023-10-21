@@ -5,9 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a2020368-7c7f-4a5c-bee5-cf7a2840c54f" name="Changes" comment="UPD: project name, Bot.logBotRunningMessage does not print bot id.">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/dev/scroogemcfawk/manicurebot/Bot.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/dev/scroogemcfawk/manicurebot/Bot.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/kotlin/dev/scroogemcfawk/manicurebot/keyboards/ContractorCancelInline.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/dev/scroogemcfawk/manicurebot/callbacks/CallbackHandler.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/dev/scroogemcfawk/manicurebot/callbacks/CallbackHandler.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/dev/scroogemcfawk/manicurebot/commands/CommandHandler.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/dev/scroogemcfawk/manicurebot/commands/CommandHandler.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/dev/scroogemcfawk/manicurebot/config/Locale.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/dev/scroogemcfawk/manicurebot/config/Locale.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -15,7 +16,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="DarkyenusTimeTracker">
-    <option name="totalTimeSeconds" value="109860" />
+    <option name="totalTimeSeconds" value="112237" />
     <option name="naggedAbout" value="1" />
   </component>
   <component name="ExternalProjectsData">
@@ -39,8 +40,8 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Kotlin Interface" />
-        <option value="Kotlin File" />
         <option value="Kotlin Class" />
+        <option value="Kotlin File" />
       </list>
     </option>
   </component>
@@ -82,7 +83,7 @@
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "WebServerToolWindowFactoryState": "false",
-    "git-widget-placeholder": "contractor-appointment",
+    "git-widget-placeholder": "contractor-cancel",
     "ignore.virus.scanning.warn.message": "true",
     "last_opened_file_path": "C:/Users/scroo/IdeaProjects/appointment-managing-bot-for-self-employed",
     "node.js.detected.package.eslint": "true",

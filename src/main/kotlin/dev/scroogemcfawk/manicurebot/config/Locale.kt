@@ -37,6 +37,7 @@ data class Locale(
     val cancelConfirmMessageTemplate: String = "Your appointment is on $1, are you sure you want " +
             "to cancel it?",
     val cancelDoneMessage: String = "Appointment canceled.",
+    val cancelContractorChoosePromptMessage: String = "Choose an appointment to cancel:",
 
     val operationCancelledMessage: String = "Operation cancelled.",
 
