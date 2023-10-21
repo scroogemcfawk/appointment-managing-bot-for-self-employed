@@ -2,7 +2,6 @@ package dev.scroogemcfawk.manicurebot.commands
 
 import dev.inmo.tgbotapi.bot.TelegramBot
 import dev.inmo.tgbotapi.extensions.api.answers.answerCallbackQuery
-import dev.inmo.tgbotapi.extensions.api.edit.edit
 import dev.inmo.tgbotapi.extensions.api.edit.text.editMessageText
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.send
@@ -17,6 +16,7 @@ import dev.inmo.tgbotapi.types.ChatId
 import dev.inmo.tgbotapi.types.message.abstracts.CommonMessage
 import dev.inmo.tgbotapi.types.message.content.TextContent
 import dev.inmo.tgbotapi.types.queries.callback.DataCallbackQuery
+import dev.inmo.tgbotapi.utils.RiskFeature
 import dev.scroogemcfawk.manicurebot.callbacks.restore
 import dev.scroogemcfawk.manicurebot.chatId
 import dev.scroogemcfawk.manicurebot.config.Config
@@ -44,16 +44,18 @@ class CommandHandler(
 ) {
 
     private val bot: TelegramBot = ctx.bot
-    private val manager = config.manager
+    private val contractor = config.manager
     private val dev = config.dev
 
+    @Suppress("unused")
     private val callbackSessions = CallbackSessions()
 
     private val dateTimeFormat = DateTimeFormatter.ofPattern(locale.dateTimeFormat)
 
     private val log = LoggerFactory.getLogger(this::class.java)!!
 
-    //=================================== COMMON ===================================================
+    //================================== COMMAND SECTION ===========================================
+    //====================================== COMMON ================================================
 
     suspend fun start(msg: TextMessage) {
         try {
@@ -80,15 +82,20 @@ class CommandHandler(
                 bot.sendTextMessage(msg.chat.id, locale.registerUserAlreadyExistsMessage)
                 return
             }
-            val name =
-                ctx.waitText(SendTextMessage(msg.chat.id, locale.registerUserNamePromptMessage))
-                    .first().text
-            val phone =
-                ctx.waitText(SendTextMessage(msg.chat.id, locale.registerUserPhonePromptMessage))
-                    .first().text
+
+            val name = ctx.waitText(
+                SendTextMessage(msg.chat.id, locale.registerUserNamePromptMessage)
+            ).first().text
+
+            val phone = ctx.waitText(
+                SendTextMessage(msg.chat.id, locale.registerUserPhonePromptMessage)
+            ).first().text
+
             userChats[msg.chat.id.chatId] = User(msg.chat.id.chatId, name, phone)
+
             bot.sendTextMessage(
-                msg.chat.id, locale.registerSuccessfulRegistrationMessageTemplate
+                msg.chat.id,
+                locale.registerSuccessfulRegistrationMessageTemplate
                     .replace("\$1", locale.appointmentCommand)
             )
         } catch (e: Exception) {
@@ -120,50 +127,21 @@ class CommandHandler(
 
     suspend fun appointment(msg: TextMessage, appointments: AppointmentList) {
         try {
-            if (msg.chat.id == manager) {
-                bot.send(manager, locale.featureIsNotImplementedYetMessage)
-                return
-            }
-            if (msg.chat.id.chatId !in userChats) {
-                bot.send(
-                    msg.chat.id, locale.appointmentNotRegisteredMessageTemplate
-                        .replace("\$1", locale.registerCommand)
-                )
-                return
-            }
             if (!appointments.hasAvailable()) {
                 bot.send(msg.chat.id, locale.appointmentAppointmentsNotAvailableMessage)
                 return
             }
-            appointments.getFutureAppointmentOrNull(msg.chat.id.chatId)
-                ?.let { appointment ->
-                    bot.send(
-                        msg.chat.id, "${locale.appointmentAlreadyHaveAppointmentMessage} ${
-                            appointment.datetime.format(
-                                dateTimeFormat
-                            )
-                        }"
-                    )
-                } ?: run {
-                try {
-                    bot.send(
-                        msg.chat.id,
-                        locale.appointmentChooseAppointmentMessage,
-                        replyMarkup = getInlineAvailableAppointmentsMarkup(
-                            msg.chat.id.chatId,
-                            appointments,
-                            locale
-                        )
-                    )
-                } catch (e: Exception) {
-                    log.warn(e.message)
-                }
+            if (msg.chat.id == contractor) {
+                makeAppointmentAsContractor(appointments)
+            } else {
+                makeAppointmentAsClient(msg, appointments)
             }
         } catch (e: Exception) {
             log.error("Error during /${locale.appointmentCommand}")
         }
     }
 
+    @OptIn(RiskFeature::class)
     suspend fun reschedule(msg: CommonMessage<TextContent>, appointments: AppointmentList) {
         try {
 //            if (msg.chat.id == manager) {
@@ -205,8 +183,8 @@ class CommandHandler(
 
     suspend fun cancel(msg: TextMessage, appointments: AppointmentList) {
         try {
-            if (msg.chat.id == manager) {
-                bot.send(manager, locale.featureIsNotImplementedYetMessage)
+            if (msg.chat.id == contractor) {
+                bot.send(contractor, locale.featureIsNotImplementedYetMessage)
                 return
             }
             if (!appointments.clientHasAppointment(msg.chat.id.chatId)) {
@@ -226,11 +204,11 @@ class CommandHandler(
         }
     }
 
-    //=================================== MANAGER ==================================================
+    //=================================== CONTRACTOR ===============================================
 
     suspend fun add(msg: TextMessage) {
         try {
-            if (msg.chat.id != manager) {
+            if (msg.chat.id != contractor) {
                 return
             }
             bot.send(
@@ -245,7 +223,7 @@ class CommandHandler(
 
     suspend fun list(msg: TextMessage, appointments: AppointmentList) {
         try {
-            if (msg.chat.id == manager) {
+            if (msg.chat.id == contractor) {
                 ArrayList<String>().joinToString("") { it.length.toString() }
                 bot.sendTextMessage(msg.chat.id,
                     appointments.joinToString(",\n") { it.datetime.format(dateTimeFormat) })
@@ -257,7 +235,7 @@ class CommandHandler(
 
     suspend fun notify(msg: TextMessage, users: HashMap<Long, User>) {
         try {
-            if (msg.chat.id == manager) {
+            if (msg.chat.id == contractor) {
                 val text =
                     ctx.waitText(
                         SendTextMessage(
@@ -274,5 +252,47 @@ class CommandHandler(
         }
     }
 
+    //=============================== END OF COMMAND SECTION =======================================
+    //=============================== HELPER METHOD SECTION ========================================
 
+    private suspend fun makeAppointmentAsClient(msg: TextMessage, appointments: AppointmentList) {
+        if (msg.chatId !in userChats) {
+            bot.send(
+                msg.chat.id, locale.appointmentNotRegisteredMessageTemplate
+                    .replace("\$1", locale.registerCommand)
+            )
+            return
+        }
+        appointments.getFutureAppointmentOrNull(msg.chatId)?.let { appointment ->
+            bot.send(
+                msg.chat.id, "${locale.appointmentAlreadyHaveAppointmentMessage} ${
+                    appointment.datetime.format(
+                        dateTimeFormat
+                    )
+                }"
+            )
+        } ?: run {
+            bot.send(
+                msg.chat.id,
+                locale.appointmentChooseAppointmentMessage,
+                replyMarkup = getInlineAvailableAppointmentsMarkup(
+                    msg.chat.id.chatId,
+                    appointments,
+                    locale
+                )
+            )
+        }
+    }
+
+    private suspend fun makeAppointmentAsContractor(appointments: AppointmentList) {
+        bot.send(
+            contractor,
+            locale.appointmentChooseAppointmentMessage,
+            replyMarkup = getInlineAvailableAppointmentsMarkup(
+                contractor.chatId,
+                appointments,
+                locale
+            )
+        )
+    }
 }
