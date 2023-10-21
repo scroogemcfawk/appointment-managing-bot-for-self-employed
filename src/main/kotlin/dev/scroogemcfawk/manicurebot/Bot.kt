@@ -35,6 +35,8 @@ class Bot(private val config: Config) {
     private val userChats = HashMap<Long, User>()
 
     init {
+        userChats[config.manager.chatId] = User(config.manager.chatId, "Contractor", "")
+        userChats[config.dev.chatId] = User(config.dev.chatId, "Developer", "")
         mock()
     }
 
@@ -46,10 +48,10 @@ class Bot(private val config: Config) {
             val ltin2m = LocalTime.of(dtin2m.hour, dtin2m.minute)
             return LocalDateTime.of(ldin2m, ltin2m)
         }
-        appointments.add(Appointment(LocalDateTime.of(2023, Month.OCTOBER, 18, 11, 30), null))
-        appointments.add(Appointment(LocalDateTime.of(2023, Month.OCTOBER, 19, 12, 30), null))
-        appointments.add(Appointment(LocalDateTime.of(2023, Month.OCTOBER, 20, 13, 30), null))
-//        appointments.add(Appointment(LocalDateTime.of(2023, Month.OCTOBER, 23, 17, 45), null))
+        appointments.add(Appointment(LocalDateTime.of(2023, Month.OCTOBER, 22, 11, 30), null))
+        appointments.add(Appointment(LocalDateTime.of(2023, Month.OCTOBER, 23, 12, 30), null))
+        appointments.add(Appointment(LocalDateTime.of(2023, Month.OCTOBER, 24, 13, 30), null))
+        appointments.add(Appointment(LocalDateTime.of(2023, Month.OCTOBER, 25, 17, 45), null))
 
 //        appointments.add(Appointment(getLDTAfterMinutes(1), null))
 //        appointments.add(Appointment(getLDTAfterMinutes(2), null))
@@ -67,7 +69,7 @@ class Bot(private val config: Config) {
     @OptIn(PreviewFeature::class)
     suspend fun run(): Job = bot.buildBehaviourWithLongPolling(scope) {
         val commandHandler = CommandHandler(this, config, locale, userChats)
-        // TODO: refactor this shit to local catch with ctx.waitCallbackQueries<DataCallbackQuery>()
+        // IDEA: refactor this shit to local catch with ctx.waitCallbackQueries<DataCallbackQuery>()
         val callbackHandler = CallbackHandler(this, config, locale, userChats, appointments)
 
         //=================================== COMMON ===========================================
@@ -106,7 +108,7 @@ class Bot(private val config: Config) {
             commandHandler.cancel(msg, appointments)
         }
 
-        //=============== MANAGER COMMANDS ==============================
+        //=============== CONTRACTOR COMMANDS ==============================
 
         onCommand(locale.addCommand, requireOnlyCommandInMessage = true) { msg ->
             commandHandler.add(msg)
