@@ -6,7 +6,9 @@ import dev.inmo.tgbotapi.extensions.api.edit.reply_markup.editMessageReplyMarkup
 import dev.inmo.tgbotapi.extensions.api.edit.text.editMessageText
 import dev.inmo.tgbotapi.extensions.api.send.send
 import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
+import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitCallbackQueries
 import dev.inmo.tgbotapi.extensions.utils.extensions.raw.message
+import dev.inmo.tgbotapi.requests.edit.text.EditChatMessageText
 import dev.inmo.tgbotapi.types.ChatId
 import dev.inmo.tgbotapi.types.queries.callback.DataCallbackQuery
 import dev.inmo.tgbotapi.utils.RiskFeature
@@ -15,7 +17,9 @@ import dev.scroogemcfawk.manicurebot.config.Locale
 import dev.scroogemcfawk.manicurebot.domain.*
 import dev.scroogemcfawk.manicurebot.keyboards.getInlineCalendarMarkup
 import dev.scroogemcfawk.manicurebot.keyboards.getInlineClockMarkup
+import dev.scroogemcfawk.manicurebot.keyboards.getRescheduleMarkupInline
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import java.time.*
@@ -229,7 +233,50 @@ class CallbackHandler(
                     bot.answerCallbackQuery(cb)
                 }
 
+                locale.rescheduleCommandShort -> {
+                    val (action, value) = data.split(":", limit = 2)
+                    when (action) {
+                        locale.rescheduleContractorShowAppointmentsToRescheduleToAction -> {
+                            bot.answerCallbackQuery(cb)
+
+                            val old = restore<Appointment>(value)
+
+                            val localCallback = ctx.waitCallbackQueries<DataCallbackQuery>(
+                                EditChatMessageText(
+                                    cb.user.id,
+                                    cb.message!!.messageId,
+                                    locale.rescheduleChooseAppointmentToRescheduleToPromptMessage,
+                                    replyMarkup = getRescheduleMarkupInline(
+                                        cb.user.id.chatId,
+                                        appointments,
+                                        locale
+                                    )
+                                )
+                            ).first().data
+                            val new = restore<Appointment>(
+                                localCallback.split(":", limit = 2)[1]
+                            )
+
+                            bot.answerCallbackQuery(cb)
+                            appointments.reschedule(old!!, new!!)
+
+                            bot.editMessageText(
+                                cb.user.id,
+                                cb.message!!.messageId,
+                                locale.rescheduleDoneMessageTemplate
+                                    .replace("\$1", old.datetime.format(dateTimeFormat))
+                                    .replace("\$2", new.datetime.format(dateTimeFormat)),
+                                replyMarkup = null
+                            )
+                        }
+                        else -> {
+                            throw Exception("Reschedule unknown action (${action}).")
+                        }
+                    }
+                }
+
                 else -> {
+                    bot.answerCallbackQuery(cb, "Unknown callback.")
                     log.warn("Unknown contractor callback source (${source}).")
                 }
             }

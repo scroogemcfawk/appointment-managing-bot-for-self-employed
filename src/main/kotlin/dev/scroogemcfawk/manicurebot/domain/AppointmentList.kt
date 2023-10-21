@@ -1,6 +1,7 @@
 package dev.scroogemcfawk.manicurebot.domain
 
 import dev.scroogemcfawk.manicurebot.isFuture
+import korlibs.time.DateTime
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -10,8 +11,11 @@ class AppointmentList(
     private val dateTimeFormat = DateTimeFormatter.ofPattern(dateTimePattern)
     private val appointments = ArrayList<Appointment>()
 
-    val all: ArrayList<Appointment>
+    val all: List<Appointment>
         get() = this.appointments
+
+    val allFuture: List<Appointment>
+        get() = this.appointments.filter { it.datetime > LocalDateTime.now() }
 
     fun add(a: Appointment) {
         appointments.add(a)
@@ -50,7 +54,7 @@ class AppointmentList(
         return false
     }
 
-    fun assignClient(a: Appointment, id: Long) {
+    fun assignClient(a: Appointment, id: Long?) {
         for (e in appointments) {
             if (e == a) {
                 e.client = id
@@ -86,8 +90,8 @@ class AppointmentList(
 
     fun reschedule(old: Appointment, new: Appointment): Boolean {
         if (isAvailable(new)) {
-            assignClient(new, old.client!!)
-            old.client = null
+            assignClient(new, old.client)
+            assignClient(old, null)
             return true
         }
         return false

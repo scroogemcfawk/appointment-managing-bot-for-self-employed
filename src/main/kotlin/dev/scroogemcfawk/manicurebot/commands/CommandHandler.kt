@@ -141,36 +141,55 @@ class CommandHandler(
     @OptIn(RiskFeature::class)
     suspend fun reschedule(msg: CommonMessage<TextContent>, appointments: AppointmentList) {
         try {
-//            if (msg.chat.id == manager) {
-//                bot.send(manager, locale.featureIsNotImplementedYetMessage)
-//                return
-//            }
-            val oldAppointment = appointments.getClientAppointmentOrNull(msg.chatId)
-            if (oldAppointment == null) {
-                bot.send(msg.chat, "You do not have and appointment.")
+            if (!appointments.hasAvailable()) {
+                bot.send(
+                    msg.chat,
+                    locale.rescheduleNoAppointmentsAvailableMessage
+                )
                 return
             }
-            val cb = ctx.waitCallbackQueries<DataCallbackQuery>(
-                SendTextMessage(
-                    msg.chat.id, "HUI",
-                    replyMarkup = getRescheduleMarkupInline(
-                        msg.chatId,
+            if (msg.chat.id == contractor) {
+                bot.send(
+                    contractor,
+                    locale.rescheduleContractorChooseAppointmentToReschedulePromptMessage,
+                    replyMarkup = getAppointmentListInlineMarkup(
+                        contractor.chatId,
                         appointments,
-                        locale
+                        dateTimeFormat,
+                        "c:${locale.rescheduleCommandShort}:${locale
+                            .rescheduleContractorShowAppointmentsToRescheduleToAction}"
                     )
                 )
-            ).first()
-            bot.answerCallbackQuery(cb)
-            val newAppointment = restore<Appointment>(cb.data.split(":", limit = 2)[1])!!
-            if (appointments.reschedule(oldAppointment, newAppointment)) {
-                bot.editMessageText(
-                    cb.message!!.chat.id,
-                    cb.message!!.messageId,
-                    locale.rescheduleDoneMessageTemplate
-                        .replace("\$1", oldAppointment.datetime.format(dateTimeFormat))
-                        .replace("\$2", newAppointment.datetime.format(dateTimeFormat)),
-                    replyMarkup = null
-                )
+            } else {
+                val oldAppointment = appointments.getClientAppointmentOrNull(msg.chatId)
+                if (oldAppointment == null) {
+                    bot.send(msg.chat, locale.rescheduleYouDontHaveAppointmentMessage)
+                    return
+                }
+                // TODO: move to callback handler
+                val cb = ctx.waitCallbackQueries<DataCallbackQuery>(
+                    SendTextMessage(
+                        msg.chat.id,
+                        locale.rescheduleChooseAppointmentToRescheduleToPromptMessage,
+                        replyMarkup = getRescheduleMarkupInline(
+                            msg.chatId,
+                            appointments,
+                            locale
+                        )
+                    )
+                ).first()
+                bot.answerCallbackQuery(cb)
+                val newAppointment = restore<Appointment>(cb.data.split(":", limit = 2)[1])!!
+                if (appointments.reschedule(oldAppointment, newAppointment)) {
+                    bot.editMessageText(
+                        cb.message!!.chat.id,
+                        cb.message!!.messageId,
+                        locale.rescheduleDoneMessageTemplate
+                            .replace("\$1", oldAppointment.datetime.format(dateTimeFormat))
+                            .replace("\$2", newAppointment.datetime.format(dateTimeFormat)),
+                        replyMarkup = null
+                    )
+                }
             }
         } catch (e: Exception) {
             log.error("Error during /${locale.rescheduleCommand} ${e.message}")

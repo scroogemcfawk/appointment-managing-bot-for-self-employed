@@ -20,12 +20,21 @@ data class Locale(
     val cancelCommand: String = "cancel",
     val rescheduleCommand: String = "reschedule",
 
+    val rescheduleCommandShort: String = "r",
+    val rescheduleContractorShowAppointmentsToRescheduleToAction: String = "1",
+
     val registerUserNamePromptMessage: String = "Please, enter your name:",
     val registerUserPhonePromptMessage: String = "Please, enter your phone number:",
     val registerSuccessfulRegistrationMessageTemplate: String = "Done. You can now signup for appointments.",
     val registerUserAlreadyExistsMessage: String = "You are already registered.",
 
     val rescheduleDoneMessageTemplate: String = "Your appointment rescheduled from $1 to $2.",
+    val rescheduleYouDontHaveAppointmentMessage: String = "You do not have any appointments.",
+    val rescheduleChooseAppointmentToRescheduleToPromptMessage: String =
+        "Choose an appointment to reschedule to:",
+    val rescheduleNoAppointmentsAvailableMessage: String = "No appointments available.",
+    val rescheduleContractorChooseAppointmentToReschedulePromptMessage: String =
+        "Choose an appointment you want to reschedule:",
 
     val appointmentNotRegisteredMessageTemplate: String = "You are not registered. Please register using /$1 command.",
     val appointmentNotAlreadyTakenMessage: String = "Appointment is not available.",
