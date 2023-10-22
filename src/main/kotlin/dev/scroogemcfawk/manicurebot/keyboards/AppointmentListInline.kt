@@ -13,12 +13,18 @@ fun getAppointmentListInlineMarkup(
     chatId: Long,
     appointments: AppointmentList,
     dateTimeFormat: DateTimeFormatter,
-    callbackBase: String
+    callbackBase: String,
+    filter: Boolean = true
 ): InlineKeyboardMarkup {
 
     val mb = MatrixBuilder<InlineKeyboardButton>()
+    val appointmentsToIterate = if (filter) {
+        appointments.allFuture.filter { it.client == chatId }
+    } else {
+        appointments.allFuture
+    }
 
-    for (a in appointments.allFuture.filter { it.client == chatId }) {
+    for (a in appointmentsToIterate) {
         val rb = RowBuilder<InlineKeyboardButton>()
         rb.add(
             dataInlineButton(

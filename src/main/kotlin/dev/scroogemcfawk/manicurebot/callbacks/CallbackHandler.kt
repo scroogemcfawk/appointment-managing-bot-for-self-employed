@@ -2,6 +2,7 @@ package dev.scroogemcfawk.manicurebot.callbacks
 
 import dev.inmo.tgbotapi.extensions.api.answers.answerCallbackQuery
 import dev.inmo.tgbotapi.extensions.api.delete
+import dev.inmo.tgbotapi.extensions.api.edit.edit
 import dev.inmo.tgbotapi.extensions.api.edit.reply_markup.editMessageReplyMarkup
 import dev.inmo.tgbotapi.extensions.api.edit.text.editMessageText
 import dev.inmo.tgbotapi.extensions.api.send.send
@@ -273,6 +274,18 @@ class CallbackHandler(
                             throw Exception("Reschedule unknown action (${action}).")
                         }
                     }
+                }
+
+                locale.deleteCommandShort -> {
+                    bot.answerCallbackQuery(cb)
+                    val appointment = restore<Appointment>(data)
+                    appointments.delete(appointment!!)
+                    bot.edit(
+                        contractor,
+                        cb.message!!.messageId,
+                        locale.deleteSuccessMessage,
+                        replyMarkup = null
+                    )
                 }
 
                 else -> {

@@ -118,6 +118,10 @@ class Bot(private val config: Config) {
             commandHandler.list(msg, appointments)
         }
 
+        onCommand(locale.deleteCommand, requireOnlyCommandInMessage = true) {msg ->
+            commandHandler.delete(msg, appointments)
+        }
+
         onCommand(locale.notifyCommand, requireOnlyCommandInMessage = true) { msg ->
             commandHandler.notify(msg, userChats)
         }

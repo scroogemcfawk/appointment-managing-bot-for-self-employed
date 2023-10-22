@@ -30,6 +30,10 @@ class AppointmentList(
         }
     }
 
+    fun delete(a: Appointment) {
+        appointments.remove(a)
+    }
+
     fun getFutureAppointmentOrNull(chatId: Long): Appointment? {
         val now = LocalDateTime.now()
         for (e in appointments) {

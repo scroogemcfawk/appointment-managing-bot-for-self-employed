@@ -242,6 +242,26 @@ class CommandHandler(
         }
     }
 
+    suspend fun delete(msg: TextMessage, appointments: AppointmentList) {
+        try {
+            if (msg.chat.id == contractor) {
+                bot.send(
+                    contractor,
+                    locale.deleteSelectAppointmentPromptMessage,
+                    replyMarkup = getAppointmentListInlineMarkup(
+                        contractor.chatId,
+                        appointments,
+                        dateTimeFormat,
+                        "c:${locale.deleteCommandShort}",
+                        filter = false
+                    )
+                )
+            }
+        } catch (e: Exception) {
+            log.error("/${locale.deleteCommand} error")
+        }
+    }
+
     suspend fun notify(msg: TextMessage, users: HashMap<Long, User>) {
         try {
             if (msg.chat.id == contractor) {

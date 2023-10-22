@@ -16,11 +16,13 @@ data class Locale(
     val appointmentCommand: String = "app",
     val addCommand: String = "add",
     val listCommand: String = "list",
+    val deleteCommand: String = "delete",
     val notifyCommand: String = "notify",
     val cancelCommand: String = "cancel",
     val rescheduleCommand: String = "reschedule",
 
     val rescheduleCommandShort: String = "r",
+    val deleteCommandShort: String = "d",
     val rescheduleContractorShowAppointmentsToRescheduleToAction: String = "1",
 
     val registerUserNamePromptMessage: String = "Please, enter your name:",
@@ -51,6 +53,9 @@ data class Locale(
     val operationCancelledMessage: String = "Operation cancelled.",
 
     val addSelectDayPromptMessage: String = "Please, select a day: ",
+
+    val deleteSelectAppointmentPromptMessage: String = "Select an appointment to delete:",
+    val deleteSuccessMessage: String = "Appointment has been deleted.",
 
     val notifyNotificationMessagePromptMessage: String = "Please, enter your notification message: ",
 
