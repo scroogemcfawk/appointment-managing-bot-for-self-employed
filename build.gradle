@@ -20,6 +20,7 @@ dependencies {
 
     testImplementation 'org.jetbrains.kotlin:kotlin-test'
 
+    runtimeOnly 'com.h2database:h2:2.1.210'
     runtimeOnly 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0'
 }
 
