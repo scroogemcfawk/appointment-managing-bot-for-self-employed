@@ -21,10 +21,7 @@ import dev.scroogemcfawk.manicurebot.callbacks.restore
 import dev.scroogemcfawk.manicurebot.chatId
 import dev.scroogemcfawk.manicurebot.config.Config
 import dev.scroogemcfawk.manicurebot.config.Locale
-import dev.scroogemcfawk.manicurebot.domain.Appointment
-import dev.scroogemcfawk.manicurebot.domain.AppointmentList
-import dev.scroogemcfawk.manicurebot.domain.CallbackSessions
-import dev.scroogemcfawk.manicurebot.domain.User
+import dev.scroogemcfawk.manicurebot.domain.*
 import dev.scroogemcfawk.manicurebot.keyboards.*
 import kotlinx.coroutines.flow.first
 import org.slf4j.LoggerFactory
@@ -37,7 +34,7 @@ class CommandHandler(
     private val ctx: BehaviourContext,
     config: Config,
     private val locale: Locale,
-    private val userChats: HashMap<Long, User>,
+    private val clientChats: ClientList
 ) {
 
     private val bot: TelegramBot = ctx.bot
@@ -72,10 +69,9 @@ class CommandHandler(
 
     suspend fun register(
         msg: TextMessage,
-        userChats: HashMap<Long, User>,
     ) {
         try {
-            if (msg.chat.id.chatId in userChats) {
+            if (msg.chat.id.chatId in clientChats) {
                 bot.sendTextMessage(msg.chat.id, locale.registerUserAlreadyExistsMessage)
                 return
             }
@@ -88,7 +84,7 @@ class CommandHandler(
                 SendTextMessage(msg.chat.id, locale.registerUserPhonePromptMessage)
             ).first().text
 
-            userChats[msg.chat.id.chatId] = User(msg.chat.id.chatId, name, phone)
+            clientChats[msg.chat.id.chatId] = Client(msg.chat.id.chatId, name, phone)
 
             bot.sendTextMessage(
                 msg.chat.id,
@@ -234,8 +230,14 @@ class CommandHandler(
         try {
             if (msg.chat.id == contractor) {
                 ArrayList<String>().joinToString("") { it.length.toString() }
-                bot.sendTextMessage(msg.chat.id,
-                    appointments.joinToString(",\n") { it.datetime.format(dateTimeFormat) })
+                bot.sendTextMessage(
+                    msg.chat.id,
+//                    appointments.joinToString(",\n") { it.datetime.format(dateTimeFormat) }
+                    appointments.allFuture.run{
+                        if (this.size > 0) this.joinToString("\n")
+                        else "No appointments."
+                    }
+                )
             }
         } catch (e: Exception) {
             log.error("Error during /${locale.listCommand}")
@@ -262,7 +264,7 @@ class CommandHandler(
         }
     }
 
-    suspend fun notify(msg: TextMessage, users: HashMap<Long, User>) {
+    suspend fun notify(msg: TextMessage) {
         try {
             if (msg.chat.id == contractor) {
                 val text =
@@ -272,7 +274,7 @@ class CommandHandler(
                             locale.notifyNotificationMessagePromptMessage
                         )
                     ).first().text
-                for ((id, _) in users.toList()) {
+                for ((id, _) in clientChats.toList()) {
                     bot.send(ChatId(id), text)
                 }
             }
@@ -285,7 +287,7 @@ class CommandHandler(
     //=============================== HELPER METHOD SECTION ========================================
 
     private suspend fun makeAppointmentAsClient(msg: TextMessage, appointments: AppointmentList) {
-        if (msg.chatId !in userChats) {
+        if (msg.chatId !in clientChats) {
             bot.send(
                 msg.chat.id, locale.appointmentNotRegisteredMessageTemplate
                     .replace("\$1", locale.registerCommand)
