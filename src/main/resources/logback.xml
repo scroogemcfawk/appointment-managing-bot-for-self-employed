@@ -1,11 +1,22 @@
 <configuration>
+    <property name="LOG_DIR" value="./logs"/>
+
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%d{HH:mm:ss} [%highlight(%level)] %logger{0} at %C{0}.%M\(\): %highlight("%msg"%n)</pattern>
         </encoder>
     </appender>
 
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <file>${LOG_DIR}/bot.log</file>
+        <append>true</append>
+        <encoder>
+            <pattern>%d{HH:mm:ss} [%level] %logger{0} at %C{0}.%M\(\): %msg%n</pattern>
+        </encoder>
+    </appender>
+
     <root level="debug">
         <appender-ref ref="STDOUT" />
+        <appender-ref ref="FILE" />
     </root>
 </configuration>

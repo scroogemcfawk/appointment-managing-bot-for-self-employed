@@ -42,3 +42,4 @@ src/**/config.json
 src/**/locale_ru.json
 
 /database/
+/logs/
