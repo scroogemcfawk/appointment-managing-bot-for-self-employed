@@ -4,22 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a2020368-7c7f-4a5c-bee5-cf7a2840c54f" name="Changes" comment="ADD: &quot;reschedule appointment&quot; behavior to /reschedule as Contractor,&#10;UPD: fixed bug in AppointmentList.reschedule(), now reassigns clients for both old and new appointments.">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/dev/scroogemcfawk/manicurebot/Bot.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/dev/scroogemcfawk/manicurebot/Bot.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/dev/scroogemcfawk/manicurebot/callbacks/CallbackHandler.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/dev/scroogemcfawk/manicurebot/callbacks/CallbackHandler.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/dev/scroogemcfawk/manicurebot/commands/CommandHandler.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/dev/scroogemcfawk/manicurebot/commands/CommandHandler.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/dev/scroogemcfawk/manicurebot/config/Locale.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/dev/scroogemcfawk/manicurebot/config/Locale.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/dev/scroogemcfawk/manicurebot/domain/AppointmentList.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/dev/scroogemcfawk/manicurebot/domain/AppointmentList.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/dev/scroogemcfawk/manicurebot/keyboards/AppointmentListInline.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/dev/scroogemcfawk/manicurebot/keyboards/AppointmentListInline.kt" afterDir="false" />
-    </list>
+    <list default="true" id="a2020368-7c7f-4a5c-bee5-cf7a2840c54f" name="Changes" comment="ADD: &quot;reschedule appointment&quot; behavior to /reschedule as Contractor,&#10;UPD: fixed bug in AppointmentList.reschedule(), now reassigns clients for both old and new appointments." />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="DarkyenusTimeTracker">
-    <option name="totalTimeSeconds" value="119147" />
+    <option name="totalTimeSeconds" value="119167" />
     <option name="naggedAbout" value="1" />
   </component>
   <component name="ExternalProjectsData">
@@ -87,7 +79,7 @@
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "WebServerToolWindowFactoryState": "false",
-    "git-widget-placeholder": "contractor-delete",
+    "git-widget-placeholder": "main",
     "ignore.virus.scanning.warn.message": "true",
     "last_opened_file_path": "C:/Users/scroo/IdeaProjects/appointment-managing-bot-for-self-employed",
     "node.js.detected.package.eslint": "true",
