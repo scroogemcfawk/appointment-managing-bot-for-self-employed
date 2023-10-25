@@ -22,21 +22,22 @@ import dev.scroogemcfawk.manicurebot.keyboards.getRescheduleMarkupInline
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.*
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 
-val log = LoggerFactory.getLogger("CallbackHandler.kt")
+val log: Logger = LoggerFactory.getLogger("CallbackHandler.kt")
 
 
 @Suppress("SpellCheckingInspection")
 class CallbackHandler(
     private val ctx: BehaviourContext,
-    private val config: Config,
+    config: Config,
     private val locale: Locale,
-    private val userChats: HashMap<Long, User>,
+    private val clientChats: ClientList,
     private val appointments: AppointmentList
 ) {
 
@@ -97,11 +98,7 @@ class CallbackHandler(
                 this.bot.editMessageText(
                     cb.message!!.chat.id,
                     cb.message!!.messageId,
-                    locale.cbAddSelectTimePromptMessage
-                )
-                this.bot.editMessageReplyMarkup(
-                    cb.message!!.chat.id,
-                    cb.message!!.messageId,
+                    locale.cbAddSelectTimePromptMessage,
                     replyMarkup = getInlineClockMarkup()
                 )
             }
@@ -112,19 +109,21 @@ class CallbackHandler(
                 val Y = add!!.year
                 val M = add!!.month
                 val D = add!!.dayOfMonth
-                val dateTime = restore<LocalDateTime>("Y=$Y:M=$M:D=$D:$hs:$ms")
+                val dateTime = try {
+                    restore<LocalDateTime>("Y=$Y:M=$M:D=$D:$hs:$ms")!!
+                } catch (e: Exception) {
+                    throw Exception("Unable to restore Appointment at processAdd()")
+                }
                 this.bot.answerCallbackQuery(cb, "")
+                appointments.add(Appointment(dateTime))
                 this.bot.editMessageText(
                     cb.message!!.chat.id,
                     cb.message!!.messageId,
                     locale.cbAddTimeAppointmentCreatedTemplate.replace(
                         "\$1",
-                        dateTime!!.format(dateTimeFormat)
-                    )
-                )
-                appointments.add(Appointment(dateTime))
-                this.bot.editMessageReplyMarkup(
-                    cb.message!!.chat.id, cb.message!!.messageId, replyMarkup = null
+                        dateTime.format(dateTimeFormat)
+                    ),
+                    replyMarkup = null
                 )
             }
 
@@ -208,7 +207,7 @@ class CallbackHandler(
             contractor,
             locale.cbAppointmentCompleteManagerNotificationMessage
                 .replace("\$1", appointment.datetime.format(dateFormat))
-                .replace("\$2", userChats[cb.user.id.chatId]!!.toString())
+                .replace("\$2", clientChats[cb.user.id.chatId]!!.toString())
         )
     }
 
@@ -220,7 +219,6 @@ class CallbackHandler(
     {
         try {
             val (source, data) = cbData.split(":", limit = 2)
-
             when (source) {
                 locale.cancelCommand -> {
                     val appointment = restore<Appointment>(data)
@@ -232,6 +230,9 @@ class CallbackHandler(
                         replyMarkup = null
                     )
                     bot.answerCallbackQuery(cb)
+                    if (appointment.client != contractor.chatId) {
+                        appointment.client?.let { notify(it, locale.appointmentHasBeenCanceled) }
+                    }
                 }
 
                 locale.rescheduleCommandShort -> {
@@ -286,6 +287,9 @@ class CallbackHandler(
                         locale.deleteSuccessMessage,
                         replyMarkup = null
                     )
+                    if (appointment.client != contractor.chatId) {
+                        appointment.client?.let { notify(it, locale.appointmentHasBeenCanceled) }
+                    }
                 }
 
                 else -> {
@@ -298,9 +302,22 @@ class CallbackHandler(
         }
     }
 
+    private suspend fun notify(client: Long, message: String) {
+        try {
+            bot.send(
+                ChatId(client),
+                message
+            )
+        } catch (e: Exception) {
+            log.error("Failed to notify user: ${e.message}")
+        }
+    }
+
     suspend fun processCallback(cb: DataCallbackQuery, appointments: AppointmentList) {
         try {
             val (source, data) = cb.data.split(":", limit = 2)
+            log.debug("Source: $source")
+            log.debug("Data: $data")
             when (source) {
                 "empty" -> {
                     answerEmpty(cb)
