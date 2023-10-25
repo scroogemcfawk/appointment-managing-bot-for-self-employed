@@ -22,7 +22,7 @@ suspend fun main(args: Array<String>) {
         json.decodeFromString(Config.serializer(), File(args.first()).readText())
     } catch (e: Exception) {
         log.error("Failed get config: ${e.message}")
-        throw Exception("Failed get config: ${e.message}")
+        return
     }
 
     try {
@@ -38,6 +38,4 @@ suspend fun main(args: Array<String>) {
     } catch (e: Exception) {
         log.error("Failed database initialization: ${e.message}")
     }
-
-
 }
