@@ -219,10 +219,6 @@ class CallbackHandler(
     {
         try {
             val (source, data) = cbData.split(":", limit = 2)
-
-            log.debug(source)
-            log.debug(data)
-
             when (source) {
                 locale.cancelCommand -> {
                     val appointment = restore<Appointment>(data)
@@ -320,6 +316,8 @@ class CallbackHandler(
     suspend fun processCallback(cb: DataCallbackQuery, appointments: AppointmentList) {
         try {
             val (source, data) = cb.data.split(":", limit = 2)
+            log.debug("Source: $source")
+            log.debug("Data: $data")
             when (source) {
                 "empty" -> {
                     answerEmpty(cb)

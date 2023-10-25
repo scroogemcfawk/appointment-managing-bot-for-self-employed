@@ -16,6 +16,7 @@ private val log: Logger = LoggerFactory.getLogger("ClientList")
             val rs = statement.executeQuery(sql)
 
             return rs?.run {
+                rs.next()
                 Client(
                     rs.getLong(1),
                     rs.getString(2),
