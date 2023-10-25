@@ -28,17 +28,28 @@ import java.time.Month
 
 class Bot(private val config: Config, con: Connection) {
 
-    private val locale = Json.decodeFromString(Locale.serializer(), File(config.locale).readText())
+    private val log = LoggerFactory.getLogger(Bot::class.java)
+
+    private val locale = try {
+        Json.decodeFromString(Locale.serializer(), File(config.locale).readText())
+    } catch (e: Exception) {
+        throw Exception("Failed locale deserialization: ${e.message}")
+    }
+
     private val bot = telegramBot(config.token)
     private val scope = CoroutineScope(Dispatchers.Default)
-    private val log = LoggerFactory.getLogger(Bot::class.java)
 
     private val appointments = AppointmentList(locale.dateTimeFormat, con)
     private val clientChats = ClientList(con)
 
     init {
-        clientChats[config.manager.chatId] = Client(config.manager.chatId, "Contractor", "-")
-        clientChats[config.dev.chatId] = Client(config.dev.chatId, "Developer", "-")
+        try {
+            clientChats[config.manager.chatId] = Client(config.manager.chatId, "Contractor", "-")
+            clientChats[config.dev.chatId] = Client(config.dev.chatId, "Developer", "-")
+        } catch (e: Exception) {
+            throw Exception("Failed manager chats initialization: ${e.message}")
+        }
+
 //        mock()
     }
 
@@ -129,6 +140,8 @@ class Bot(private val config: Config, con: Connection) {
         }
 
         //=============== CALLBACKS ==============================
+
+        // TODO: rewrite this with onDataCallbackQuery(String) so it's the same as command handling
 
         onDataCallbackQuery { cb ->
             callbackHandler.processCallback(cb, appointments)

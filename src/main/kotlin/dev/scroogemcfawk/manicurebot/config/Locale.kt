@@ -54,6 +54,8 @@ data class Locale(
 
     val addSelectDayPromptMessage: String = "Please, select a day: ",
 
+    val listNoAppointmentsMessage: String = "No appointments",
+
     val deleteSelectAppointmentPromptMessage: String = "Select an appointment to delete:",
     val deleteSuccessMessage: String = "Appointment has been deleted.",
 

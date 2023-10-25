@@ -10,10 +10,20 @@ import org.slf4j.LoggerFactory
  */
 suspend fun main(args: Array<String>) {
 
-    val log = LoggerFactory.getLogger("App.kt")!!
+    val log = try {
+        LoggerFactory.getLogger("App.kt")
+    } catch (e: Exception) {
+        throw Exception("Failed to get logger: ${e.message}")
+    }
 
     val json = Json { ignoreUnknownKeys = true }
-    val config = json.decodeFromString(Config.serializer(), File(args.first()).readText())
+
+    val config = try {
+        json.decodeFromString(Config.serializer(), File(args.first()).readText())
+    } catch (e: Exception) {
+        log.error("Failed get config: ${e.message}")
+        throw Exception("Failed get config: ${e.message}")
+    }
 
     try {
         val dbManager = DbManager(config.dataSourceUrl)
@@ -26,7 +36,7 @@ suspend fun main(args: Array<String>) {
         bot.run().join()
 
     } catch (e: Exception) {
-        log.error("Initialization failed.")
+        log.error("Failed database initialization: ${e.message}")
     }
 
 

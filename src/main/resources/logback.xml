@@ -7,11 +7,17 @@
         </encoder>
     </appender>
 
-    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-        <file>${LOG_DIR}/bot.log</file>
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/hot.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/cold/%d{yyyy-MM, aux}/%d{yyyy-MM-dd}.log</fileNamePattern>
+        </rollingPolicy>
+
         <append>true</append>
+
         <encoder>
-            <pattern>%d{HH:mm:ss} [%level] %logger{0} at %C{0}.%M\(\): %msg%n</pattern>
+            <pattern>%d{HH:mm:ss} [%level] %logger{0} at %C{0}.%M\(\): "%msg"%n</pattern>
         </encoder>
     </appender>
 
