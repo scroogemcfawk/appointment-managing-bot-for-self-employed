@@ -234,6 +234,9 @@ class CallbackHandler(
                         replyMarkup = null
                     )
                     bot.answerCallbackQuery(cb)
+                    if (appointment.client != contractor.chatId) {
+                        appointment.client?.let { notify(it, locale.appointmentHasBeenCanceled) }
+                    }
                 }
 
                 locale.rescheduleCommandShort -> {
@@ -288,6 +291,9 @@ class CallbackHandler(
                         locale.deleteSuccessMessage,
                         replyMarkup = null
                     )
+                    if (appointment.client != contractor.chatId) {
+                        appointment.client?.let { notify(it, locale.appointmentHasBeenCanceled) }
+                    }
                 }
 
                 else -> {
@@ -297,6 +303,17 @@ class CallbackHandler(
             }
         } catch (e: Exception) {
             throw Exception("Exception in processContractorCallback: ${e.message}.")
+        }
+    }
+
+    private suspend fun notify(client: Long, message: String) {
+        try {
+            bot.send(
+                ChatId(client),
+                message
+            )
+        } catch (e: Exception) {
+            log.error("Failed to notify user: ${e.message}")
         }
     }
 
