@@ -87,7 +87,10 @@ data class Locale(
     val saturdayShort: String = "Sat",
     val sundayShort: String = "Sun",
 
-    val startMessage: String = "If you see this message, please text @scroogemcfawk asap.",
-    val helpMessage: String = "If you see this message, please text @scroogemcfawk asap.",
-    val unknownCommand: String = "If you see this message, please text @scroogemcfawk asap.",
+    val defaultLocaleMessage: String = "If you see this message, please text @scroogemcfawk asap.",
+
+    val startMessage: String = defaultLocaleMessage,
+    val helpMessage: String = defaultLocaleMessage,
+    val helpContractorMessage: String = defaultLocaleMessage,
+    val unknownCommand: String = defaultLocaleMessage,
 )

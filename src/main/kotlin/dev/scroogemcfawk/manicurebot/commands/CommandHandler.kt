@@ -61,7 +61,11 @@ class CommandHandler(
 
     suspend fun help(msg: TextMessage) {
         try {
-            bot.sendMessage(msg.chat, locale.helpMessage)
+            if (msg.chat.id != contractor) {
+                bot.sendMessage(msg.chat, locale.helpMessage)
+            } else {
+                bot.sendMessage(msg.chat, locale.helpContractorMessage)
+            }
         } catch (e: Exception) {
             log.error("Error on /${locale.helpCommand} : ${e.message}")
         }
