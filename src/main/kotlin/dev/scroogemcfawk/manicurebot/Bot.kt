@@ -13,31 +13,44 @@ import dev.scroogemcfawk.manicurebot.config.Config
 import dev.scroogemcfawk.manicurebot.config.Locale
 import dev.scroogemcfawk.manicurebot.domain.Appointment
 import dev.scroogemcfawk.manicurebot.domain.AppointmentList
-import dev.scroogemcfawk.manicurebot.domain.User
+import dev.scroogemcfawk.manicurebot.domain.Client
+import dev.scroogemcfawk.manicurebot.domain.ClientList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.sql.Connection
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.Month
 
-class Bot(private val config: Config) {
+class Bot(private val config: Config, con: Connection) {
 
-    private val locale = Json.decodeFromString(Locale.serializer(), File(config.locale).readText())
-    private val bot = telegramBot(config.token)
-    private val scope = CoroutineScope(Dispatchers.Default)
     private val log = LoggerFactory.getLogger(Bot::class.java)
 
-    private val appointments = AppointmentList(locale.dateTimeFormat)
-    private val userChats = HashMap<Long, User>()
+    private val locale = try {
+        Json.decodeFromString(Locale.serializer(), File(config.locale).readText())
+    } catch (e: Exception) {
+        throw Exception("Failed locale deserialization: ${e.message}")
+    }
+
+    private val bot = telegramBot(config.token)
+    private val scope = CoroutineScope(Dispatchers.Default)
+
+    private val appointments = AppointmentList(locale.dateTimeFormat, con)
+    private val clientChats = ClientList(con)
 
     init {
-        userChats[config.manager.chatId] = User(config.manager.chatId, "Contractor", "")
-        userChats[config.dev.chatId] = User(config.dev.chatId, "Developer", "")
-        mock()
+        try {
+            clientChats[config.manager.chatId] = Client(config.manager.chatId, "Contractor", "-")
+            clientChats[config.dev.chatId] = Client(config.dev.chatId, "Developer", "-")
+        } catch (e: Exception) {
+            throw Exception("Failed manager chats initialization: ${e.message}")
+        }
+
+//        mock()
     }
 
     @Suppress("SpellCheckingInspection", "unused")
@@ -48,10 +61,10 @@ class Bot(private val config: Config) {
             val ltin2m = LocalTime.of(dtin2m.hour, dtin2m.minute)
             return LocalDateTime.of(ldin2m, ltin2m)
         }
-        appointments.add(Appointment(LocalDateTime.of(2023, Month.OCTOBER, 22, 11, 30), null))
-        appointments.add(Appointment(LocalDateTime.of(2023, Month.OCTOBER, 23, 12, 30), null))
-        appointments.add(Appointment(LocalDateTime.of(2023, Month.OCTOBER, 24, 13, 30), null))
-        appointments.add(Appointment(LocalDateTime.of(2023, Month.OCTOBER, 25, 17, 45), null))
+        appointments.add(Appointment(LocalDateTime.of(2023, Month.OCTOBER, 21, 11, 30), null))
+        appointments.add(Appointment(LocalDateTime.of(2023, Month.OCTOBER, 26, 12, 30), null))
+        appointments.add(Appointment(LocalDateTime.of(2023, Month.OCTOBER, 27, 13, 30), null))
+        appointments.add(Appointment(LocalDateTime.of(2023, Month.OCTOBER, 28, 17, 45), null))
 
 //        appointments.add(Appointment(getLDTAfterMinutes(1), null))
 //        appointments.add(Appointment(getLDTAfterMinutes(2), null))
@@ -68,9 +81,9 @@ class Bot(private val config: Config) {
 
     @OptIn(PreviewFeature::class)
     suspend fun run(): Job = bot.buildBehaviourWithLongPolling(scope) {
-        val commandHandler = CommandHandler(this, config, locale, userChats)
+        val commandHandler = CommandHandler(this, config, locale, clientChats)
         // IDEA: refactor this shit to local catch with ctx.waitCallbackQueries<DataCallbackQuery>()
-        val callbackHandler = CallbackHandler(this, config, locale, userChats, appointments)
+        val callbackHandler = CallbackHandler(this, config, locale, clientChats, appointments)
 
         //=================================== COMMON ===========================================
 
@@ -83,7 +96,7 @@ class Bot(private val config: Config) {
         }
 
         onCommand(locale.registerCommand, requireOnlyCommandInMessage = true) { msg ->
-            commandHandler.register(msg, userChats)
+            commandHandler.register(msg)
         }
 
         onCommand(locale.idCommand, requireOnlyCommandInMessage = true) { msg ->
@@ -123,10 +136,12 @@ class Bot(private val config: Config) {
         }
 
         onCommand(locale.notifyCommand, requireOnlyCommandInMessage = true) { msg ->
-            commandHandler.notify(msg, userChats)
+            commandHandler.notify(msg)
         }
 
         //=============== CALLBACKS ==============================
+
+        // TODO: rewrite this with onDataCallbackQuery(String) so it's the same as command handling
 
         onDataCallbackQuery { cb ->
             callbackHandler.processCallback(cb, appointments)

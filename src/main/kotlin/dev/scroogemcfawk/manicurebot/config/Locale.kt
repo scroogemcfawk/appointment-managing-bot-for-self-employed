@@ -54,6 +54,8 @@ data class Locale(
 
     val addSelectDayPromptMessage: String = "Please, select a day: ",
 
+    val listNoAppointmentsMessage: String = "No appointments",
+
     val deleteSelectAppointmentPromptMessage: String = "Select an appointment to delete:",
     val deleteSuccessMessage: String = "Appointment has been deleted.",
 
@@ -73,6 +75,8 @@ data class Locale(
 
     val address: String = "Planet Earth",
 
+    val appointmentHasBeenCanceled: String = "Appointment has been canceled.",
+
     val featureIsNotImplementedYetMessage: String = "This feature is not implemented yet.",
 
     val mondayShort: String = "Mon",
@@ -83,7 +87,10 @@ data class Locale(
     val saturdayShort: String = "Sat",
     val sundayShort: String = "Sun",
 
-    val startMessage: String = "If you see this message, please text @scroogemcfawk asap.",
-    val helpMessage: String = "If you see this message, please text @scroogemcfawk asap.",
-    val unknownCommand: String = "If you see this message, please text @scroogemcfawk asap.",
+    val defaultLocaleMessage: String = "If you see this message, please text @scroogemcfawk asap.",
+
+    val startMessage: String = defaultLocaleMessage,
+    val helpMessage: String = defaultLocaleMessage,
+    val helpContractorMessage: String = defaultLocaleMessage,
+    val unknownCommand: String = defaultLocaleMessage,
 )
