@@ -75,7 +75,8 @@ data class Locale(
 
     val address: String = "Planet Earth",
 
-    val appointmentHasBeenCanceled: String = "Appointment has been canceled.",
+    val appointmentHasBeenCanceledMessage: String = "Appointment has been canceled.",
+    val appointmentHasBeenCanceledTemplate: String = "Appointment $1 has been canceled.",
 
     val featureIsNotImplementedYetMessage: String = "This feature is not implemented yet.",
 

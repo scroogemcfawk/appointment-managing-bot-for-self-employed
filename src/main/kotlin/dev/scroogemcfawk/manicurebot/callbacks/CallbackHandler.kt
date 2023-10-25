@@ -231,7 +231,7 @@ class CallbackHandler(
                     )
                     bot.answerCallbackQuery(cb)
                     if (appointment.client != contractor.chatId) {
-                        appointment.client?.let { notify(it, locale.appointmentHasBeenCanceled) }
+                        appointment.client?.let { notify(it, locale.appointmentHasBeenCanceledMessage) }
                     }
                 }
 
@@ -288,7 +288,7 @@ class CallbackHandler(
                         replyMarkup = null
                     )
                     if (appointment.client != contractor.chatId) {
-                        appointment.client?.let { notify(it, locale.appointmentHasBeenCanceled) }
+                        appointment.client?.let { notify(it, locale.appointmentHasBeenCanceledMessage) }
                     }
                 }
 
@@ -364,11 +364,15 @@ class CallbackHandler(
         val verdct = data.split(":", limit = 2)[0]
         answerEmpty(cb)
         if (verdct == "yes") {
-            val appointment = data.split(":", limit = 2)[1]
-            restore<Appointment>(appointment)?.run {
+            val appointment = restore<Appointment>(data.split(":", limit = 2)[1]) ?: throw Exception("Failed to restore appointment.")
+            appointment.run {
                 appointments.cancel(this)
             }
             bot.editMessageText(cb.message!!.chat.id, cb.message!!.messageId, locale.cancelDoneMessage, replyMarkup = null)
+            bot.send(
+                contractor,
+                locale.appointmentHasBeenCanceledTemplate.replace("\$1", appointment.datetime.format(dateTimeFormat))
+            )
         } else {
             bot.delete(cb.message!!.chat.id, cb.message!!.messageId)
         }
