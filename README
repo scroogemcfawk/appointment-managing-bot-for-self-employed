@@ -1,0 +1,28 @@
+appointment-managing-bot-for-self-employed
+==========================================
+
+This bot is made for self employed people who provide
+their service in person. It uses simple
+contractor-client role model. At first, a contractor
+creates a list of appointments (date and time records)
+that are suitable for him/her (fit in his/her schedule).
+Then, a client can make an appointment with the contractor
+choosing the date-time record out of a list made by the
+contractor. The only thing here that needed to be made
+by contractor is to create these records.
+
+For example, the contractor can be a manicurist (as a
+person I have made this bot to), beauty master, tutor
+or any other person who provides their service in
+person and needs automatic appointment management.
+
+Terms of use:
+You can basically do whatever you want with
+this code, but keep sources open.
+See LICENCE for more information.
+
+Note:
+The code might have a lot of bugs and is structured
+as is, because the person who wrote it is a
+fucking braindamaged retard (me), so, please,
+keep it in mind when you use it.
