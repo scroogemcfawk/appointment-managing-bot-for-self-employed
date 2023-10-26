@@ -92,8 +92,7 @@ class CommandHandler(
 
             bot.sendTextMessage(
                 msg.chat.id,
-                locale.registerSuccessfulRegistrationMessageTemplate
-                    .replace("\$1", locale.appointmentCommand)
+                locale.registerSuccessfulRegistrationMessage + "\n" + locale.helpMessage
             )
         } catch (e: Exception) {
             log.error("Error on /${locale.registerCommand} : ${e.message}")

@@ -27,6 +27,7 @@ data class Locale(
 
     val registerUserNamePromptMessage: String = "Please, enter your name:",
     val registerUserPhonePromptMessage: String = "Please, enter your phone number:",
+    val registerSuccessfulRegistrationMessage: String = "You are registered now.",
     val registerSuccessfulRegistrationMessageTemplate: String = "Done. You can now signup for appointments.",
     val registerUserAlreadyExistsMessage: String = "You are already registered.",
 
