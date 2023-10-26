@@ -11,12 +11,15 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitCallbackQueries
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitText
 import dev.inmo.tgbotapi.extensions.utils.extensions.raw.message
+import dev.inmo.tgbotapi.extensions.utils.formatting.createMarkdownV2Text
 import dev.inmo.tgbotapi.requests.send.SendTextMessage
 import dev.inmo.tgbotapi.types.ChatId
 import dev.inmo.tgbotapi.types.message.abstracts.CommonMessage
 import dev.inmo.tgbotapi.types.message.content.TextContent
+import dev.inmo.tgbotapi.types.message.textsources.bold
 import dev.inmo.tgbotapi.types.queries.callback.DataCallbackQuery
 import dev.inmo.tgbotapi.utils.RiskFeature
+import dev.inmo.tgbotapi.utils.extensions.toMarkdown
 import dev.scroogemcfawk.manicurebot.callbacks.restore
 import dev.scroogemcfawk.manicurebot.chatId
 import dev.scroogemcfawk.manicurebot.config.Config
@@ -242,10 +245,15 @@ class CommandHandler(
                 ArrayList<String>().joinToString("") { it.length.toString() }
                 bot.sendTextMessage(
                     msg.chat.id,
-                    appointments.allFuture.run{
-                        if (this.isNotEmpty()) this.joinToString("\n")
+                    appointments.allFuture.sortedBy { it.datetime }.run{
+                        if (this.isNotEmpty()) this.joinToString("\n\n") { app ->
+//                            app.datetime.format(dateTimeFormat) + " " + (app.client?.let {
+//                                "${clientChats[it]?.name ?: locale.available} ${clientChats[it]?.phoneNumber ?: ""}"
+//                            } ?: locale.available)
+                            app.datetime.format(dateTimeFormat) + " " +(app.client?.let { clientChats[it] } ?: locale.available)
+                        }
                         else locale.listNoAppointmentsMessage
-                    }
+                    },
                 )
             }
         } catch (e: Exception) {
