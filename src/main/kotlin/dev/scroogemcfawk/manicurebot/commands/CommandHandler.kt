@@ -128,6 +128,7 @@ class CommandHandler(
                 bot.send(msg.chat.id, locale.appointmentAppointmentsNotAvailableMessage)
                 return
             }
+            appointments.clearOld()
             if (msg.chat.id == contractor) {
                 makeAppointmentAsContractor(appointments)
             } else {
