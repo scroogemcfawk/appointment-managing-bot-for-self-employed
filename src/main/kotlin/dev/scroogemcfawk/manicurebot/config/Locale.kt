@@ -27,6 +27,7 @@ data class Locale(
 
     val registerUserNamePromptMessage: String = "Please, enter your name:",
     val registerUserPhonePromptMessage: String = "Please, enter your phone number:",
+    val registerSuccessfulRegistrationMessage: String = "You are registered now.",
     val registerSuccessfulRegistrationMessageTemplate: String = "Done. You can now signup for appointments.",
     val registerUserAlreadyExistsMessage: String = "You are already registered.",
 
@@ -39,12 +40,13 @@ data class Locale(
         "Choose an appointment you want to reschedule:",
 
     val appointmentNotRegisteredMessageTemplate: String = "You are not registered. Please register using /$1 command.",
-    val appointmentNotAlreadyTakenMessage: String = "Appointment is not available.",
+    val appointmentAlreadyTakenMessage: String = "Appointment is not available.",
     val appointmentAppointmentsNotAvailableMessage: String = "Sorry, appointments are not available.",
     val appointmentAlreadyHaveAppointmentMessage: String = "Sorry, you already have an appointment: ",
     val appointmentChooseAppointmentMessage: String = "Please, choose an appointment: ",
+    val appointmentRescheduledNotificationTemplate: String = "Appointment $1 has been rescheduled to $2",
 
-    val cancelNoAppointmentsFoundMessage: String = "You don't have any appointments scheduled.",
+    val cancelNoAppointmentsFoundMessageTemplate: String = "You don't have any appointments scheduled.",
     val cancelConfirmMessageTemplate: String = "Your appointment is on $1, are you sure you want " +
             "to cancel it?",
     val cancelDoneMessage: String = "Appointment canceled.",
@@ -75,6 +77,9 @@ data class Locale(
 
     val address: String = "Planet Earth",
 
+    val available: String = "Available",
+    val cancelOperation: String = "Cancel",
+
     val appointmentHasBeenCanceledMessage: String = "Appointment has been canceled.",
     val appointmentHasBeenCanceledTemplate: String = "Appointment $1 has been canceled.",
 
@@ -90,7 +95,7 @@ data class Locale(
 
     val defaultLocaleMessage: String = "If you see this message, please text @scroogemcfawk asap.",
 
-    val startMessage: String = defaultLocaleMessage,
+    val startMessageTemplate: String = defaultLocaleMessage,
     val helpMessage: String = defaultLocaleMessage,
     val helpContractorMessage: String = defaultLocaleMessage,
     val unknownCommand: String = defaultLocaleMessage,

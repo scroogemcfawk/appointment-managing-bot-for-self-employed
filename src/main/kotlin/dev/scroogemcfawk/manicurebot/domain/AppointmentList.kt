@@ -58,10 +58,9 @@ class AppointmentList(
     fun add(a: Appointment) {
         appointments.add(a)
         addToTable(a)
-        clearOld()
     }
 
-    private fun clearOld() {
+    fun clearOld() {
         val sql = "delete from APPOINTMENT where DATETIME < systimestamp"
         val s = con.createStatement()
         s.execute(sql)

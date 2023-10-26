@@ -6,6 +6,7 @@ import dev.inmo.tgbotapi.extensions.api.edit.edit
 import dev.inmo.tgbotapi.extensions.api.edit.reply_markup.editMessageReplyMarkup
 import dev.inmo.tgbotapi.extensions.api.edit.text.editMessageText
 import dev.inmo.tgbotapi.extensions.api.send.send
+import dev.inmo.tgbotapi.extensions.api.send.sendTextMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitCallbackQueries
 import dev.inmo.tgbotapi.extensions.utils.extensions.raw.message
@@ -175,6 +176,17 @@ class CallbackHandler(
         data: String,
         appointments: AppointmentList)
     {
+        if (data == "cancel") {
+            bot.answerCallbackQuery(cb)
+            bot.edit(
+                cb.user.id,
+                cb.message!!.messageId,
+                locale.operationCancelledMessage,
+                replyMarkup = null
+            )
+            return
+        }
+
         val (idPair, app) = data.split(":", limit = 2)
 
         val id = restore<Long>(idPair)!!
@@ -184,7 +196,7 @@ class CallbackHandler(
             bot.editMessageText(
                 cb.message!!.chat,
                 cb.message!!.messageId,
-                locale.appointmentNotAlreadyTakenMessage,
+                locale.appointmentAlreadyTakenMessage,
                 replyMarkup = null
             )
             answerEmpty(cb)
