@@ -53,7 +53,7 @@ class CommandHandler(
 
     suspend fun start(msg: TextMessage) {
         try {
-            bot.sendMessage(msg.chat, locale.startMessage)
+            bot.sendMessage(msg.chat, locale.startMessageTemplate.replace("\$1", locale.registerCommand))
         } catch (e: Exception) {
             log.error("Error on /${locale.startCommand} : ${e.message}")
         }
@@ -200,7 +200,7 @@ class CommandHandler(
     suspend fun cancel(msg: TextMessage, appointments: AppointmentList) {
         try {
             if (!appointments.clientHasAppointment(msg.chat.id.chatId)) {
-                bot.send(msg.chat.id, locale.cancelNoAppointmentsFoundMessage)
+                bot.send(msg.chat.id, locale.cancelNoAppointmentsFoundMessageTemplate.replace("\$1", locale.appointmentCommand))
                 return
             }
             if (msg.chat.id == contractor) {

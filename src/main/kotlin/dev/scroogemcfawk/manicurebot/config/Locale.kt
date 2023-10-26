@@ -39,12 +39,12 @@ data class Locale(
         "Choose an appointment you want to reschedule:",
 
     val appointmentNotRegisteredMessageTemplate: String = "You are not registered. Please register using /$1 command.",
-    val appointmentNotAlreadyTakenMessage: String = "Appointment is not available.",
+    val appointmentAlreadyTakenMessage: String = "Appointment is not available.",
     val appointmentAppointmentsNotAvailableMessage: String = "Sorry, appointments are not available.",
     val appointmentAlreadyHaveAppointmentMessage: String = "Sorry, you already have an appointment: ",
     val appointmentChooseAppointmentMessage: String = "Please, choose an appointment: ",
 
-    val cancelNoAppointmentsFoundMessage: String = "You don't have any appointments scheduled.",
+    val cancelNoAppointmentsFoundMessageTemplate: String = "You don't have any appointments scheduled.",
     val cancelConfirmMessageTemplate: String = "Your appointment is on $1, are you sure you want " +
             "to cancel it?",
     val cancelDoneMessage: String = "Appointment canceled.",
@@ -90,7 +90,7 @@ data class Locale(
 
     val defaultLocaleMessage: String = "If you see this message, please text @scroogemcfawk asap.",
 
-    val startMessage: String = defaultLocaleMessage,
+    val startMessageTemplate: String = defaultLocaleMessage,
     val helpMessage: String = defaultLocaleMessage,
     val helpContractorMessage: String = defaultLocaleMessage,
     val unknownCommand: String = defaultLocaleMessage,

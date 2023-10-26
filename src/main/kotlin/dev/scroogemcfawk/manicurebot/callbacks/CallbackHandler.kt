@@ -184,7 +184,7 @@ class CallbackHandler(
             bot.editMessageText(
                 cb.message!!.chat,
                 cb.message!!.messageId,
-                locale.appointmentNotAlreadyTakenMessage,
+                locale.appointmentAlreadyTakenMessage,
                 replyMarkup = null
             )
             answerEmpty(cb)
