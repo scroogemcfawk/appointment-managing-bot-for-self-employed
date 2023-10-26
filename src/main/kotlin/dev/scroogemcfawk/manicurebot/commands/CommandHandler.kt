@@ -10,6 +10,7 @@ import dev.inmo.tgbotapi.extensions.api.send.sendTextMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitCallbackQueries
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitText
+import dev.inmo.tgbotapi.extensions.utils.extensions.raw.from
 import dev.inmo.tgbotapi.extensions.utils.extensions.raw.message
 import dev.inmo.tgbotapi.extensions.utils.formatting.createMarkdownV2Text
 import dev.inmo.tgbotapi.requests.send.SendTextMessage
@@ -102,14 +103,8 @@ class CommandHandler(
         }
     }
 
-    suspend fun id(
-        msg: TextMessage,
-    ) {
-        try {
-            bot.sendMessage(dev, "${msg.chat.id.chatId}")
-        } catch (e: Exception) {
-            log.error("Error on /${locale.idCommand} : ${e.message}")
-        }
+    fun id(msg: TextMessage) {
+        log.info("${msg.from?.username?.username}: " + msg.chat.id.chatId.toString())
     }
 
     suspend fun unhandled(

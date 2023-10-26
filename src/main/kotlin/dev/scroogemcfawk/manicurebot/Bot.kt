@@ -6,7 +6,12 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviourWithLongPoll
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onDataCallbackQuery
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onUnhandledCommand
+import dev.inmo.tgbotapi.extensions.utils.asUser
+import dev.inmo.tgbotapi.extensions.utils.extensions.raw.from
+import dev.inmo.tgbotapi.extensions.utils.extensions.raw.text
+import dev.inmo.tgbotapi.extensions.utils.usernameOrNull
 import dev.inmo.tgbotapi.utils.PreviewFeature
+import dev.inmo.tgbotapi.utils.RiskFeature
 import dev.scroogemcfawk.manicurebot.callbacks.CallbackHandler
 import dev.scroogemcfawk.manicurebot.commands.CommandHandler
 import dev.scroogemcfawk.manicurebot.config.Config
@@ -79,7 +84,7 @@ class Bot(private val config: Config, con: Connection) {
         )
     }
 
-    @OptIn(PreviewFeature::class)
+    @OptIn(PreviewFeature::class, RiskFeature::class)
     suspend fun run(): Job = bot.buildBehaviourWithLongPolling(scope) {
         val commandHandler = CommandHandler(this, config, locale, clientChats)
         // IDEA: refactor this shit to local catch with ctx.waitCallbackQueries<DataCallbackQuery>()

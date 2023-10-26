@@ -7,8 +7,8 @@ import kotlinx.serialization.Serializable
 data class Config(
     val token: String,
     val locale: String,
-    val dev: ChatId,
-    val manager: ChatId,
+    val dev: ChatId = ChatId(0),
+    val manager: ChatId = ChatId(0),
     val notifyClientBeforeAppointmentInHours: Int = 24,
     val dataSourceUrl: String,
     val dataSourceUser: String
