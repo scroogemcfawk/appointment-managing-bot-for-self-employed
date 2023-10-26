@@ -6,6 +6,7 @@ import dev.inmo.tgbotapi.types.buttons.inline.dataInlineButton
 import dev.inmo.tgbotapi.utils.MatrixBuilder
 import dev.inmo.tgbotapi.utils.RowBuilder
 import dev.inmo.tgbotapi.utils.plus
+import dev.inmo.tgbotapi.utils.row
 import dev.scroogemcfawk.manicurebot.config.Locale
 import dev.scroogemcfawk.manicurebot.domain.AppointmentList
 import java.time.LocalDateTime
@@ -53,4 +54,5 @@ private fun MatrixBuilder<InlineKeyboardButton>.addAvailableAppointments(
 
         this.add(rb.row)
     }
+    this.add(listOf(dataInlineButton(locale.cancelOperation, "${callBackSource}:cancel")))
 }
