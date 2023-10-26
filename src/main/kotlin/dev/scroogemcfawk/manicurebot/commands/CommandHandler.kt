@@ -190,6 +190,12 @@ class CommandHandler(
                             .replace("\$2", newAppointment.datetime.format(dateTimeFormat)),
                         replyMarkup = null
                     )
+                    bot.send(
+                        contractor,
+                        locale.appointmentRescheduledNotificationTemplate
+                            .replace("\$1", oldAppointment.datetime.format(dateTimeFormat))
+                            .replace("\$2", newAppointment.datetime.format(dateTimeFormat))
+                    )
                 }
             }
         } catch (e: Exception) {

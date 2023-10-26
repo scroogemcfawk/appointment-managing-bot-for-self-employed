@@ -43,6 +43,7 @@ data class Locale(
     val appointmentAppointmentsNotAvailableMessage: String = "Sorry, appointments are not available.",
     val appointmentAlreadyHaveAppointmentMessage: String = "Sorry, you already have an appointment: ",
     val appointmentChooseAppointmentMessage: String = "Please, choose an appointment: ",
+    val appointmentRescheduledNotificationTemplate: String = "Appointment $1 has been rescheduled to $2",
 
     val cancelNoAppointmentsFoundMessageTemplate: String = "You don't have any appointments scheduled.",
     val cancelConfirmMessageTemplate: String = "Your appointment is on $1, are you sure you want " +
