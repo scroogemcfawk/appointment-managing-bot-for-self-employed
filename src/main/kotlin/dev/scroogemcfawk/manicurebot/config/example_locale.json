@@ -1,0 +1,27 @@
+{
+  "isDefaultLocale": false,
+  "dateFormat": "yyyy.MM.dd",
+  "dateTimeFormat": "yyyy.MM.dd HH:mm",
+
+  "startCommand": "start",
+  "helpCommand": "help",
+  "registerCommand": "register",
+  "idCommand": "_id",
+  "appointmentCommand": "app",
+  "addCommand": "add",
+  "listCommand": "list",
+  "deleteCommand": "delete",
+  "notifyCommand": "notify",
+  "cancelCommand": "cancel",
+  "rescheduleCommand": "reschedule",
+
+  "mondayShort": "Mon",
+  "tuesdayShort": "Tue",
+  "wednesdayShort": "Wed",
+  "thursdayShort": "Thu",
+  "fridayShort": "Fri",
+  "saturdayShort": "Sat",
+  "sundayShort": "Sun",
+
+  "SEE Locale.kt FOR ALL KEYS": ":)"
+}

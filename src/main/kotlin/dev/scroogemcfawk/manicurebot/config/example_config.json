@@ -1,0 +1,9 @@
+{
+  "token": "TELEGRAM_BOT_TOKEN",
+  "locale": "ABSOLUTE_PATH_TO_LOCALE/locale_ru.json",
+  "dev": 0,
+  "manager": 0,
+  "notifyClientBeforeAppointmentInHours": 24,
+  "dataSourceUrl": "jdbc:h2:./database/test;AUTO_SERVER=TRUE",
+  "dataSourceUser": "sa"
+}
