@@ -1,6 +1,6 @@
 package smf.samurai1.repository
 
-import org.slf4j.LoggerFactory
+import org.tinylog.Logger
 import smf.samurai1.entity.Appointment
 import smf.samurai1.isFuture
 import java.sql.Connection
@@ -11,9 +11,14 @@ class AppointmentRepo(
     dateTimePattern: String,
     private val con: Connection
 ) {
-    private val log = LoggerFactory.getLogger(Appointment::class.java)
+
     private val dateTimeFormat = DateTimeFormatter.ofPattern(dateTimePattern)
     private val appointments = ArrayList<Appointment>()
+
+    init {
+        val statement = con.createStatement()
+        statement.execute(SQL.APPOINTMENT.CREATE)
+    }
 
     @Suppress("DuplicatedCode")
     val all: List<Appointment>
@@ -73,7 +78,7 @@ class AppointmentRepo(
             val s = con.createStatement()
             s.execute(sql)
         } catch (e: Exception) {
-            log.error(e.message)
+            Logger.error { e }
         }
     }
 
@@ -88,7 +93,7 @@ class AppointmentRepo(
     }
 
     private fun cancelInTable(a: Appointment) {
-        log.debug(a.toString())
+        Logger.debug { a.toString() }
         val sql = "update appointment set client = null where DATETIME = '${a.datetime}' and client = ${a.client}"
         val s = con.createStatement()
         s.execute(sql)

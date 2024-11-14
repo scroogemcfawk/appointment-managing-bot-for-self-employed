@@ -1,13 +1,15 @@
 package smf.samurai1.repository
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import org.tinylog.Logger
 import smf.samurai1.entity.Client
 import java.sql.Connection
 
 class ClientRepo(private val con: Connection) {
-//    private val clientChats = HashMap<Long, Client>()
-private val log: Logger = LoggerFactory.getLogger("ClientList")
+
+    init {
+        val statement = con.createStatement()
+        statement.execute(SQL.CLIENT.CREATE)
+    }
 
     operator fun get(id: Long): Client? {
 
@@ -23,7 +25,7 @@ private val log: Logger = LoggerFactory.getLogger("ClientList")
                 )
             }
         } catch (e: Exception) {
-            log.error("Get: ${e.message}")
+            Logger.error { "Get: $e" }
             throw e
         }
     }
@@ -36,7 +38,7 @@ private val log: Logger = LoggerFactory.getLogger("ClientList")
             val statement = con.createStatement()
             statement.execute(sql)
         } catch (e: Exception) {
-            log.error("Set: ${e.message}")
+            Logger.error { "Set: $e" }
             throw e
         }
     }
@@ -62,7 +64,7 @@ private val log: Logger = LoggerFactory.getLogger("ClientList")
         val local = HashMap<Long, Client>()
 
         rs?.run {
-            while(rs.next()) {
+            while (rs.next()) {
                 val id = rs.getLong(1)
                 local[id] = Client(id, rs.getString(2), rs.getString(3))
             }

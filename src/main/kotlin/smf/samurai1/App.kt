@@ -1,8 +1,9 @@
 package smf.samurai1
 
-import smf.samurai1.config.Config
 import kotlinx.serialization.json.Json
 import org.tinylog.Logger
+import smf.samurai1.config.Config
+import smf.samurai1.repository.DatabaseManager
 import java.io.File
 import kotlin.io.path.Path
 import kotlin.io.path.createDirectories
@@ -33,11 +34,8 @@ suspend fun main(args: Array<String>) {
     }
 
     val con = try {
-        val dbManager = DbManager(config.databaseName)
-        dbManager.initDataBase()
-//        dbManager.dropData()
-
-         dbManager.con
+        val databaseManager = DatabaseManager(config.databaseName)
+        databaseManager.getConnection()
     } catch (e: Exception) {
         Logger.error{ "Failed database initialization: $e" }
         return
