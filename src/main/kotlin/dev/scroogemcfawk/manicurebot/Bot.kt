@@ -28,6 +28,10 @@ import java.sql.Connection
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.Month
+import kotlin.io.path.Path
+import kotlin.io.path.createDirectories
+import kotlin.io.path.createFile
+import kotlin.io.path.notExists
 
 class Bot(private val config: Config, con: Connection, configFile: File) {
 
@@ -38,6 +42,13 @@ class Bot(private val config: Config, con: Connection, configFile: File) {
         ignoringKeys.decodeFromString(Locale.serializer(),
                                       configFile.toPath().parent.resolve(config.locale).toFile().readText())
     } catch (e: Exception) {
+        val configDir = Path(".").resolve("config")
+        configDir.createDirectories()
+        val configFile = configDir.resolve("example_locale.json")
+        if (configFile.notExists()) {
+            configFile.createFile()
+            configFile.toFile().writeText(readResourceFile("example_locale.json"))
+        }
         throw Exception("Failed locale deserialization: ${e.message}")
     }
 
