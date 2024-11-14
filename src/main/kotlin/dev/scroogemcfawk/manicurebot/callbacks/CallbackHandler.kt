@@ -76,7 +76,7 @@ class CallbackHandler(
 
     @OptIn(RiskFeature::class)
     @Suppress("LocalVariableName")
-    private suspend fun processAdd(cb: DataCallbackQuery, data: String, appointments: AppointmentRepo) {
+    private suspend fun processAdd(cb: DataCallbackQuery, data: String) {
         val (action, value) = data.split(":", limit = 2)
         when (action) {
             "select" -> {
@@ -102,7 +102,7 @@ class CallbackHandler(
                 val D = add!!.dayOfMonth
                 val dateTime = try {
                     restore<LocalDateTime>("Y=$Y:M=$M:D=$D:$hs:$ms")!!
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     throw Exception("Unable to restore Appointment at processAdd()")
                 }
                 this.bot.answerCallbackQuery(cb, "")
@@ -161,11 +161,7 @@ class CallbackHandler(
     }
 
     @OptIn(RiskFeature::class)
-    private suspend fun processAppointment(
-        cb: DataCallbackQuery,
-        data: String,
-        appointments: AppointmentRepo)
-    {
+    private suspend fun processAppointment(cb: DataCallbackQuery, data: String) {
         if (data == "cancel") {
             bot.answerCallbackQuery(cb)
             bot.edit(
@@ -215,12 +211,9 @@ class CallbackHandler(
         }
     }
 
+    @Throws(Exception::class)
     @OptIn(RiskFeature::class)
-    private suspend fun processContractorCallback(
-        cb: DataCallbackQuery,
-        cbData: String,
-        appointments: AppointmentRepo)
-    {
+    private suspend fun processContractorCallback(cb: DataCallbackQuery, cbData: String) {
         try {
             val (source, data) = cbData.split(":", limit = 2)
             when (source) {
@@ -306,7 +299,7 @@ class CallbackHandler(
                 }
             }
         } catch (e: Exception) {
-            throw Exception("Exception in processContractorCallback: ${e.message}.")
+            throw Exception("Exception in processContractorCallback: $e.")
         }
     }
 
@@ -321,7 +314,7 @@ class CallbackHandler(
         }
     }
 
-    suspend fun processCallback(cb: DataCallbackQuery, appointments: AppointmentRepo) {
+    suspend fun processCallback(cb: DataCallbackQuery) {
         try {
             val (source, data) = cb.data.split(":", limit = 2)
             Logger.debug{"Source: $source"}
@@ -333,11 +326,11 @@ class CallbackHandler(
 
                 // Contractor-specific callbacks
                 "c" -> {
-                    processContractorCallback(cb, data, appointments)
+                    processContractorCallback(cb, data)
                 }
 
                 locale.addCommand -> {
-                    processAdd(cb, data, appointments)
+                    processAdd(cb, data)
                 }
 
                 "calendar" -> {
@@ -349,7 +342,7 @@ class CallbackHandler(
                 }
 
                 locale.appointmentCommand -> {
-                    processAppointment(cb, data, appointments)
+                    processAppointment(cb, data)
                 }
 
                 "L" -> {

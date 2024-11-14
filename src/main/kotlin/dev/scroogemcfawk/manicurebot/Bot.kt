@@ -100,7 +100,7 @@ class Bot(private val config: Config, con: Connection, configFile: File) {
 
     @OptIn(PreviewFeature::class, RiskFeature::class)
     suspend fun run(): Job = bot.buildBehaviourWithLongPolling(scope) {
-        val commandHandler = CommandHandler(this, config, locale, clientChats)
+        val commandHandler = CommandHandler(this, config, locale, clientChats, appointments)
         // IDEA: refactor this shit to local catch with ctx.waitCallbackQueries<DataCallbackQuery>()
         val callbackHandler = CallbackHandler(this, config, locale, clientChats, appointments)
 
@@ -135,15 +135,15 @@ class Bot(private val config: Config, con: Connection, configFile: File) {
         //=============== CLIENT COMMANDS ==============================
 
         onCommand(locale.appointmentCommand, requireOnlyCommandInMessage = true) { msg ->
-            commandHandler.appointment(msg, appointments)
+            commandHandler.appointment(msg)
         }
 
         onCommand(locale.rescheduleCommand, requireOnlyCommandInMessage = true) {msg->
-            commandHandler.reschedule(msg, appointments)
+            commandHandler.reschedule(msg)
         }
 
         onCommand(locale.cancelCommand, requireOnlyCommandInMessage = true) {msg->
-            commandHandler.cancel(msg, appointments)
+            commandHandler.cancel(msg)
         }
 
         //=============== CONTRACTOR COMMANDS ==============================
@@ -153,11 +153,11 @@ class Bot(private val config: Config, con: Connection, configFile: File) {
         }
 
         onCommand(locale.listCommand, requireOnlyCommandInMessage = true) { msg ->
-            commandHandler.list(msg, appointments)
+            commandHandler.list(msg)
         }
 
         onCommand(locale.deleteCommand, requireOnlyCommandInMessage = true) {msg ->
-            commandHandler.delete(msg, appointments)
+            commandHandler.delete(msg)
         }
 
         onCommand(locale.notifyCommand, requireOnlyCommandInMessage = true) { msg ->
@@ -169,7 +169,7 @@ class Bot(private val config: Config, con: Connection, configFile: File) {
         // TODO: rewrite this with onDataCallbackQuery(String) so it's the same as command handling
 
         onDataCallbackQuery { cb ->
-            callbackHandler.processCallback(cb, appointments)
+            callbackHandler.processCallback(cb)
         }
 
         logBotRunningMessage()
