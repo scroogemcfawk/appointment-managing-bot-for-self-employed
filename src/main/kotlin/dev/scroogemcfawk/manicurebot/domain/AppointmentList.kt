@@ -36,7 +36,7 @@ class AppointmentList(
     @Suppress("DuplicatedCode")
     val allFuture: List<Appointment>
         get() {
-            val sql = "select * from appointment where datetime > systimestamp"
+            val sql = "select * from appointment where datetime > date()"
             val s = con.createStatement()
             val rs = s.executeQuery(sql)
 
@@ -61,7 +61,7 @@ class AppointmentList(
     }
 
     fun clearOld() {
-        val sql = "delete from APPOINTMENT where DATETIME < systimestamp"
+        val sql = "delete from APPOINTMENT where DATETIME < date()"
         val s = con.createStatement()
         s.execute(sql)
     }

@@ -12,15 +12,12 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitCallbackQ
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitText
 import dev.inmo.tgbotapi.extensions.utils.extensions.raw.from
 import dev.inmo.tgbotapi.extensions.utils.extensions.raw.message
-import dev.inmo.tgbotapi.extensions.utils.formatting.createMarkdownV2Text
 import dev.inmo.tgbotapi.requests.send.SendTextMessage
 import dev.inmo.tgbotapi.types.ChatId
 import dev.inmo.tgbotapi.types.message.abstracts.CommonMessage
 import dev.inmo.tgbotapi.types.message.content.TextContent
-import dev.inmo.tgbotapi.types.message.textsources.bold
 import dev.inmo.tgbotapi.types.queries.callback.DataCallbackQuery
 import dev.inmo.tgbotapi.utils.RiskFeature
-import dev.inmo.tgbotapi.utils.extensions.toMarkdown
 import dev.scroogemcfawk.manicurebot.callbacks.restore
 import dev.scroogemcfawk.manicurebot.chatId
 import dev.scroogemcfawk.manicurebot.config.Config
@@ -28,7 +25,7 @@ import dev.scroogemcfawk.manicurebot.config.Locale
 import dev.scroogemcfawk.manicurebot.domain.*
 import dev.scroogemcfawk.manicurebot.keyboards.*
 import kotlinx.coroutines.flow.first
-import org.slf4j.LoggerFactory
+import org.tinylog.Logger
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 
@@ -50,8 +47,6 @@ class CommandHandler(
 
     private val dateTimeFormat = DateTimeFormatter.ofPattern(locale.dateTimeFormat)
 
-    private val log = LoggerFactory.getLogger(this::class.java)!!
-
     //================================== COMMAND SECTION ===========================================
     //====================================== COMMON ================================================
 
@@ -59,19 +54,19 @@ class CommandHandler(
         try {
             bot.sendMessage(msg.chat, locale.startMessageTemplate.replace("\$1", locale.registerCommand))
         } catch (e: Exception) {
-            log.error("Error on /${locale.startCommand} : ${e.message}")
+            Logger.error{"Error on /${locale.startCommand} : ${e.message}"}
         }
     }
 
     suspend fun help(msg: TextMessage) {
         try {
-            if (msg.chat.id != contractor) {
+            if (msg.chat.id != contractor?.chatId) {
                 bot.sendMessage(msg.chat, locale.helpMessage)
             } else {
                 bot.sendMessage(msg.chat, locale.helpContractorMessage)
             }
         } catch (e: Exception) {
-            log.error("Error on /${locale.helpCommand} : ${e.message}")
+            Logger.error{"Error on /${locale.helpCommand} : ${e.message}"}
         }
     }
 
@@ -99,12 +94,12 @@ class CommandHandler(
                 locale.registerSuccessfulRegistrationMessage + "\n" + locale.helpMessage
             )
         } catch (e: Exception) {
-            log.error("Error on /${locale.registerCommand} : ${e.message}")
+            Logger.error{"Error on /${locale.registerCommand} : ${e.message}"}
         }
     }
 
     fun id(msg: TextMessage) {
-        log.info("${msg.from?.username?.username}: " + msg.chat.id.chatId.toString())
+        Logger.info{ "${msg.from?.username?.username}: " + msg.chat.id.chatId.toString()}
     }
 
     suspend fun unhandled(
@@ -113,7 +108,7 @@ class CommandHandler(
         try {
             bot.reply(msg, locale.unknownCommand)
         } catch (e: Exception) {
-            log.error("Error on unhandled command reply.")
+            Logger.error{"Error on unhandled command reply."}
         }
     }
 
@@ -126,13 +121,13 @@ class CommandHandler(
                 return
             }
             appointments.clearOld()
-            if (msg.chat.id == contractor) {
+            if (msg.chat.id == contractor?.chatId) {
                 makeAppointmentAsContractor(appointments)
             } else {
                 makeAppointmentAsClient(msg, appointments)
             }
         } catch (e: Exception) {
-            log.error("Error on /${locale.appointmentCommand} : ${e.message}")
+            Logger.error{"Error on /${locale.appointmentCommand} : ${e.message}"}
         }
     }
 
@@ -146,12 +141,12 @@ class CommandHandler(
                 )
                 return
             }
-            if (msg.chat.id == contractor) {
+            if (msg.chat.id == contractor?.chatId) {
                 bot.send(
-                    contractor,
+                    contractor.chatId,
                     locale.rescheduleContractorChooseAppointmentToReschedulePromptMessage,
                     replyMarkup = getAppointmentListInlineMarkup(
-                        contractor.chatId,
+                        contractor,
                         appointments,
                         dateTimeFormat,
                         "c:${locale.rescheduleCommandShort}:${locale
@@ -187,16 +182,18 @@ class CommandHandler(
                             .replace("\$2", newAppointment.datetime.format(dateTimeFormat)),
                         replyMarkup = null
                     )
-                    bot.send(
-                        contractor,
-                        locale.appointmentRescheduledNotificationTemplate
-                            .replace("\$1", oldAppointment.datetime.format(dateTimeFormat))
-                            .replace("\$2", newAppointment.datetime.format(dateTimeFormat))
-                    )
+                    if (contractor != null) {
+                        bot.send(
+                            contractor.chatId,
+                            locale.appointmentRescheduledNotificationTemplate
+                                    .replace("\$1", oldAppointment.datetime.format(dateTimeFormat))
+                                    .replace("\$2", newAppointment.datetime.format(dateTimeFormat))
+                        )
+                    }
                 }
             }
         } catch (e: Exception) {
-            log.error("Error on /${locale.rescheduleCommand} : ${e.message}")
+            Logger.error{"Error on /${locale.rescheduleCommand} : ${e.message}"}
         }
     }
 
@@ -207,13 +204,13 @@ class CommandHandler(
                 bot.send(msg.chat.id, locale.cancelNoAppointmentsFoundMessageTemplate.replace("\$1", locale.appointmentCommand))
                 return
             }
-            if (msg.chat.id == contractor) {
+            if (msg.chat.id == contractor?.chatId) {
                 cancelAsContractor(msg, appointments)
             } else {
                 cancelAsClient(msg, appointments)
             }
         } catch (e: Exception) {
-            log.error("Error on /${locale.cancelCommand} : ${e.message}")
+            Logger.error{"Error on /${locale.cancelCommand} : ${e.message}"}
         }
     }
 
@@ -221,7 +218,7 @@ class CommandHandler(
 
     suspend fun add(msg: TextMessage) {
         try {
-            if (msg.chat.id != contractor) {
+            if (msg.chat.id != contractor?.chatId) {
                 return
             }
             bot.send(
@@ -230,13 +227,13 @@ class CommandHandler(
                 replyMarkup = getInlineCalendarMarkup(YearMonth.now(), locale)
             )
         } catch (e: Exception) {
-            log.error("Error on /${locale.addCommand} : ${e.message}")
+            Logger.error{"Error on /${locale.addCommand} : ${e.message}"}
         }
     }
 
     suspend fun list(msg: TextMessage, appointments: AppointmentList) {
         try {
-            if (msg.chat.id == contractor) {
+            if (msg.chat.id == contractor?.chatId) {
                 ArrayList<String>().joinToString("") { it.length.toString() }
                 bot.sendTextMessage(
                     msg.chat.id,
@@ -252,18 +249,18 @@ class CommandHandler(
                 )
             }
         } catch (e: Exception) {
-            log.error("Error on /${locale.listCommand} : ${e.message}")
+            Logger.error{"Error on /${locale.listCommand} : ${e.message}"}
         }
     }
 
     suspend fun delete(msg: TextMessage, appointments: AppointmentList) {
         try {
-            if (msg.chat.id == contractor) {
+            if (msg.chat.id == contractor?.chatId) {
                 bot.send(
-                    contractor,
+                    contractor.chatId,
                     locale.deleteSelectAppointmentPromptMessage,
                     replyMarkup = getAppointmentListInlineMarkup(
-                        contractor.chatId,
+                        contractor,
                         appointments,
                         dateTimeFormat,
                         "c:${locale.deleteCommandShort}",
@@ -272,13 +269,13 @@ class CommandHandler(
                 )
             }
         } catch (e: Exception) {
-            log.error("Error on /${locale.deleteCommand} : ${e.message}")
+            Logger.error{"Error on /${locale.deleteCommand} : ${e.message}"}
         }
     }
 
     suspend fun notify(msg: TextMessage) {
         try {
-            if (msg.chat.id == contractor) {
+            if (msg.chat.id == contractor?.chatId) {
                 val text =
                     ctx.waitText(
                         SendTextMessage(
@@ -291,7 +288,7 @@ class CommandHandler(
                 }
             }
         } catch (e: Exception) {
-            log.error("Error on /${locale.notifyCommand} : ${e.message}")
+            Logger.error{"Error on /${locale.notifyCommand} : ${e.message}"}
         }
     }
 
@@ -328,15 +325,17 @@ class CommandHandler(
     }
 
     private suspend fun makeAppointmentAsContractor(appointments: AppointmentList) {
-        bot.send(
-            contractor,
-            locale.appointmentChooseAppointmentMessage,
-            replyMarkup = getInlineAvailableAppointmentsMarkup(
+        if (contractor != null) {
+            bot.send(
                 contractor.chatId,
-                appointments,
-                locale
+                locale.appointmentChooseAppointmentMessage,
+                replyMarkup = getInlineAvailableAppointmentsMarkup(
+                    contractor,
+                    appointments,
+                    locale
+                )
             )
-        )
+        }
     }
 
     private suspend fun cancelAsClient(msg: TextMessage, appointments: AppointmentList) {
@@ -347,7 +346,7 @@ class CommandHandler(
                     .replace("\$1", this.datetime.format(dateTimeFormat)),
                 replyMarkup = getYesNoInlineMarkup(this)
             )
-        } ?: log.error("CommandHandler.cancelAsClient(): Appointment not found.")
+        } ?: Logger.error{"CommandHandler.cancelAsClient(): Appointment not found."}
     }
 
     private suspend fun cancelAsContractor(msg: TextMessage, appointments: AppointmentList) {

@@ -6,7 +6,6 @@ import dev.inmo.tgbotapi.extensions.api.edit.edit
 import dev.inmo.tgbotapi.extensions.api.edit.reply_markup.editMessageReplyMarkup
 import dev.inmo.tgbotapi.extensions.api.edit.text.editMessageText
 import dev.inmo.tgbotapi.extensions.api.send.send
-import dev.inmo.tgbotapi.extensions.api.send.sendTextMessage
 import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
 import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitCallbackQueries
 import dev.inmo.tgbotapi.extensions.utils.extensions.raw.message
@@ -14,6 +13,7 @@ import dev.inmo.tgbotapi.requests.edit.text.EditChatMessageText
 import dev.inmo.tgbotapi.types.ChatId
 import dev.inmo.tgbotapi.types.queries.callback.DataCallbackQuery
 import dev.inmo.tgbotapi.utils.RiskFeature
+import dev.scroogemcfawk.manicurebot.chatId
 import dev.scroogemcfawk.manicurebot.config.Config
 import dev.scroogemcfawk.manicurebot.config.Locale
 import dev.scroogemcfawk.manicurebot.domain.*
@@ -23,15 +23,11 @@ import dev.scroogemcfawk.manicurebot.keyboards.getRescheduleMarkupInline
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import org.tinylog.Logger
 import java.time.*
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
-
-val log: Logger = LoggerFactory.getLogger("CallbackHandler.kt")
-
 
 @Suppress("SpellCheckingInspection")
 class CallbackHandler(
@@ -54,8 +50,6 @@ class CallbackHandler(
     private val dateFormat = DateTimeFormatter.ofPattern(locale.dateFormat)
     private val dateTimeFormat = DateTimeFormatter.ofPattern(locale.dateTimeFormat)
 
-    private val log = LoggerFactory.getLogger(this::class.java)!!
-
     private suspend fun answerEmpty(cb: DataCallbackQuery) {
         bot.answerCallbackQuery(cb, "")
     }
@@ -68,11 +62,7 @@ class CallbackHandler(
         val dif = ChronoUnit.HOURS.between(LocalDateTime.now(), appointment.datetime)
         if (dif >= notifyBeforeHours) {
             val timeout = TimeUnit.HOURS.toMillis(dif - notifyBeforeHours.toLong())
-            log.debug(
-                "Suspended notification for {} in {} seconds",
-                appointment.datetime,
-                timeout / 1000
-            )
+            Logger.debug{ "Suspended notification for ${appointment.datetime} in ${timeout / 1000} seconds" }
             delay(timeout)
             bot.send(
                 ChatId(id), locale.remindUserMessageTemplate
@@ -80,7 +70,7 @@ class CallbackHandler(
                     .replace("\$2", locale.address)
             )
         } else {
-            log.debug("Timeout is too short.")
+            Logger.debug { "Timeout is too short." }
         }
     }
 
@@ -130,7 +120,7 @@ class CallbackHandler(
 
             else -> {
                 answerInvalid(cb)
-                log.warn("Invalid signup action: $action")
+                Logger.warn{ "Invalid signup action: $action" }
             }
         }
     }
@@ -165,7 +155,7 @@ class CallbackHandler(
 
             else -> {
                 answerInvalid(cb)
-                log.warn("Invalid calendar action: $action")
+                Logger.warn{ "Invalid calendar action: $action" }
             }
         }
     }
@@ -215,12 +205,14 @@ class CallbackHandler(
                 .replace("\$1", appointment.datetime.format(dateTimeFormat)),
             replyMarkup = null
         )
-        bot.send(
-            contractor,
-            locale.cbAppointmentCompleteManagerNotificationMessage
-                .replace("\$1", appointment.datetime.format(dateFormat))
-                .replace("\$2", clientChats[cb.user.id.chatId]!!.toString())
-        )
+        if (contractor != null) {
+            bot.send(
+                contractor.chatId,
+                locale.cbAppointmentCompleteManagerNotificationMessage
+                        .replace("\$1", appointment.datetime.format(dateFormat))
+                        .replace("\$2", clientChats[cb.user.id.chatId]!!.toString())
+            )
+        }
     }
 
     @OptIn(RiskFeature::class)
@@ -235,15 +227,17 @@ class CallbackHandler(
                 locale.cancelCommand -> {
                     val appointment = restore<Appointment>(data)
                     appointments.cancel(appointment!!)
-                    bot.editMessageText(
-                        contractor,
-                        cb.message!!.messageId,
-                        locale.cancelDoneMessage,
-                        replyMarkup = null
-                    )
-                    bot.answerCallbackQuery(cb)
-                    if (appointment.client != contractor.chatId) {
-                        appointment.client?.let { notify(it, locale.appointmentHasBeenCanceledMessage) }
+                    if (contractor != null) {
+                        bot.editMessageText(
+                            contractor.chatId,
+                            cb.message!!.messageId,
+                            locale.cancelDoneMessage,
+                            replyMarkup = null
+                        )
+                        bot.answerCallbackQuery(cb)
+                        if (appointment.client != contractor) {
+                            appointment.client?.let { notify(it, locale.appointmentHasBeenCanceledMessage) }
+                        }
                     }
                 }
 
@@ -293,20 +287,22 @@ class CallbackHandler(
                     bot.answerCallbackQuery(cb)
                     val appointment = restore<Appointment>(data)
                     appointments.delete(appointment!!)
-                    bot.edit(
-                        contractor,
-                        cb.message!!.messageId,
-                        locale.deleteSuccessMessage,
-                        replyMarkup = null
-                    )
-                    if (appointment.client != contractor.chatId) {
-                        appointment.client?.let { notify(it, locale.appointmentHasBeenCanceledMessage) }
+                    if (contractor != null) {
+                        bot.edit(
+                            contractor.chatId,
+                            cb.message!!.messageId,
+                            locale.deleteSuccessMessage,
+                            replyMarkup = null
+                        )
+                        if (appointment.client != contractor) {
+                            appointment.client?.let { notify(it, locale.appointmentHasBeenCanceledMessage) }
+                        }
                     }
                 }
 
                 else -> {
                     bot.answerCallbackQuery(cb, "Unknown callback.")
-                    log.warn("Unknown contractor callback source (${source}).")
+                    Logger.warn{"Unknown contractor callback source (${source})."}
                 }
             }
         } catch (e: Exception) {
@@ -321,15 +317,15 @@ class CallbackHandler(
                 message
             )
         } catch (e: Exception) {
-            log.error("Failed to notify user: ${e.message}")
+            Logger.error{"Failed to notify user: ${e.message}"}
         }
     }
 
     suspend fun processCallback(cb: DataCallbackQuery, appointments: AppointmentList) {
         try {
             val (source, data) = cb.data.split(":", limit = 2)
-            log.debug("Source: $source")
-            log.debug("Data: $data")
+            Logger.debug{"Source: $source"}
+            Logger.debug{"Data: $data"}
             when (source) {
                 "empty" -> {
                     answerEmpty(cb)
@@ -357,16 +353,16 @@ class CallbackHandler(
                 }
 
                 "L" -> {
-                    log.debug("Ignore local callback.")
+                    Logger.debug{"Ignore local callback."}
                 }
 
                 else -> {
                     answerInvalid(cb)
-                    log.warn("Invalid source: $source")
+                    Logger.warn{"Invalid source: $source"}
                 }
             }
         } catch (e: Exception) {
-            log.error("Faild to process callback: ${e.message}")
+            Logger.error{"Faild to process callback: ${e.message}"}
         }
     }
 
@@ -381,10 +377,12 @@ class CallbackHandler(
                 appointments.cancel(this)
             }
             bot.editMessageText(cb.message!!.chat.id, cb.message!!.messageId, locale.cancelDoneMessage, replyMarkup = null)
-            bot.send(
-                contractor,
-                locale.appointmentHasBeenCanceledTemplate.replace("\$1", appointment.datetime.format(dateTimeFormat))
-            )
+            if (contractor != null) {
+                bot.send(
+                    contractor.chatId,
+                    locale.appointmentHasBeenCanceledTemplate.replace("\$1", appointment.datetime.format(dateTimeFormat))
+                )
+            }
         } else {
             bot.delete(cb.message!!.chat.id, cb.message!!.messageId)
         }
@@ -424,7 +422,7 @@ inline fun <reified T: Any?> restore(s: String): T? {
         }
 
         else -> {
-            log.error("Unexpected type found.")
+            Logger.error{ "Unexpected type found." }
             return null
         }
     }

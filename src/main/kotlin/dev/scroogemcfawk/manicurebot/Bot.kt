@@ -5,11 +5,9 @@ import dev.inmo.tgbotapi.extensions.api.telegramBot
 import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviourWithLongPolling
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onDataCallbackQuery
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onText
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onUnhandledCommand
-import dev.inmo.tgbotapi.extensions.utils.asUser
-import dev.inmo.tgbotapi.extensions.utils.extensions.raw.from
 import dev.inmo.tgbotapi.extensions.utils.extensions.raw.text
-import dev.inmo.tgbotapi.extensions.utils.usernameOrNull
 import dev.inmo.tgbotapi.utils.PreviewFeature
 import dev.inmo.tgbotapi.utils.RiskFeature
 import dev.scroogemcfawk.manicurebot.callbacks.CallbackHandler
@@ -24,7 +22,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.serialization.json.Json
-import org.slf4j.LoggerFactory
+import org.tinylog.Logger
 import java.io.File
 import java.sql.Connection
 import java.time.LocalDateTime
@@ -33,10 +31,11 @@ import java.time.Month
 
 class Bot(private val config: Config, con: Connection) {
 
-    private val log = LoggerFactory.getLogger(Bot::class.java)
-
     private val locale = try {
-        Json.decodeFromString(Locale.serializer(), File(config.locale).readText())
+        val ignoringKeys = Json {
+            ignoreUnknownKeys = true
+        }
+        ignoringKeys.decodeFromString(Locale.serializer(), File(config.locale).readText())
     } catch (e: Exception) {
         throw Exception("Failed locale deserialization: ${e.message}")
     }
@@ -49,12 +48,15 @@ class Bot(private val config: Config, con: Connection) {
 
     init {
         try {
-            clientChats[config.manager.chatId] = Client(config.manager.chatId, "Contractor", "-")
-            clientChats[config.dev.chatId] = Client(config.dev.chatId, "Developer", "-")
+            config.manager ?.let {
+                clientChats[it] = Client(it, "Contractor", "-")
+            }
+            config.dev ?.let {
+                clientChats[it] = Client(it, "Developer", "-")
+            }
         } catch (e: Exception) {
             throw Exception("Failed manager chats initialization: ${e.message}")
         }
-
 //        mock()
     }
 
@@ -79,9 +81,9 @@ class Bot(private val config: Config, con: Connection) {
 
     private suspend fun logBotRunningMessage() {
         val me = bot.getMe()
-        log.info(
+        Logger.info {
             "${me.username?.username} (${me.firstName}) is running."
-        )
+        }
     }
 
     @OptIn(PreviewFeature::class, RiskFeature::class)
@@ -89,6 +91,12 @@ class Bot(private val config: Config, con: Connection) {
         val commandHandler = CommandHandler(this, config, locale, clientChats)
         // IDEA: refactor this shit to local catch with ctx.waitCallbackQueries<DataCallbackQuery>()
         val callbackHandler = CallbackHandler(this, config, locale, clientChats, appointments)
+
+        onText {
+            Logger.info {
+                it.text
+            }
+        }
 
         //=================================== COMMON ===========================================
 

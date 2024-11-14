@@ -1,0 +1,23 @@
+[versions]
+# sdks
+java = "21"
+kotlin = "2.0.21"
+
+# libs
+tinylog = "2.7.0"
+sqlite = "3.47.0.0"
+tgbot = "9.2.1"
+json = "1.7.3"
+
+
+[libraries]
+tinylog-api = { module = "org.tinylog:tinylog-api", version.ref = "tinylog" }
+tinylog-impl = { module = "org.tinylog:tinylog-impl", version.ref = "tinylog" }
+sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite" }
+tgbot-api = { module = "dev.inmo:tgbotapi", version.ref = "tgbot" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "json" }
+
+
+[plugins]
+kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
