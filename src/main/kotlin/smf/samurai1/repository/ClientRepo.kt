@@ -1,7 +1,8 @@
-package smf.samurai1.domain
+package smf.samurai1.repository
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import smf.samurai1.entity.Client
 import java.sql.Connection
 
 class ClientRepo(private val con: Connection) {
@@ -18,9 +19,7 @@ private val log: Logger = LoggerFactory.getLogger("ClientList")
             return rs?.run {
                 rs.next()
                 Client(
-                    rs.getLong(1),
-                    rs.getString(2),
-                    rs.getString(3)
+                    rs.getLong(1), rs.getString(2), rs.getString(3)
                 )
             }
         } catch (e: Exception) {

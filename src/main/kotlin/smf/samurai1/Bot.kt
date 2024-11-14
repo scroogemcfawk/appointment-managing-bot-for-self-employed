@@ -14,10 +14,10 @@ import smf.samurai1.callbacks.CallbackHandler
 import smf.samurai1.commands.CommandHandler
 import smf.samurai1.config.Config
 import smf.samurai1.config.Locale
-import smf.samurai1.domain.Appointment
-import smf.samurai1.domain.AppointmentRepo
-import smf.samurai1.domain.Client
-import smf.samurai1.domain.ClientRepo
+import smf.samurai1.entity.Appointment
+import smf.samurai1.repository.AppointmentRepo
+import smf.samurai1.entity.Client
+import smf.samurai1.repository.ClientRepo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

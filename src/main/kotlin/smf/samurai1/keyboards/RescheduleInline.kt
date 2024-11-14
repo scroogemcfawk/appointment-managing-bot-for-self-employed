@@ -2,7 +2,7 @@ package smf.samurai1.keyboards
 
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardMarkup
 import smf.samurai1.config.Locale
-import smf.samurai1.domain.AppointmentRepo
+import smf.samurai1.repository.AppointmentRepo
 
 
 fun getRescheduleMarkupInline(

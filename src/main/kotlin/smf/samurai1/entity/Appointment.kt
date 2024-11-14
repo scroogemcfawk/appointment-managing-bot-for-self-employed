@@ -1,4 +1,4 @@
-package smf.samurai1.domain
+package smf.samurai1.entity
 
 import java.time.LocalDate
 import java.time.LocalDateTime

@@ -22,10 +22,13 @@ import smf.samurai1.callbacks.restore
 import smf.samurai1.chatId
 import smf.samurai1.config.Config
 import smf.samurai1.config.Locale
-import smf.samurai1.domain.*
+import smf.samurai1.entity.*
 import smf.samurai1.keyboards.*
 import kotlinx.coroutines.flow.first
 import org.tinylog.Logger
+import smf.samurai1.callbacks.CallbackSessions
+import smf.samurai1.repository.AppointmentRepo
+import smf.samurai1.repository.ClientRepo
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 

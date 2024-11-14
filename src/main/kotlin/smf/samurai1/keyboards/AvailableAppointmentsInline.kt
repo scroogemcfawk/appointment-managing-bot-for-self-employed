@@ -7,7 +7,7 @@ import dev.inmo.tgbotapi.utils.MatrixBuilder
 import dev.inmo.tgbotapi.utils.RowBuilder
 import dev.inmo.tgbotapi.utils.plus
 import smf.samurai1.config.Locale
-import smf.samurai1.domain.AppointmentRepo
+import smf.samurai1.repository.AppointmentRepo
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit

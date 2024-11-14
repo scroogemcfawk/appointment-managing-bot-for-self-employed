@@ -16,7 +16,7 @@ import dev.inmo.tgbotapi.utils.RiskFeature
 import smf.samurai1.chatId
 import smf.samurai1.config.Config
 import smf.samurai1.config.Locale
-import smf.samurai1.domain.*
+import smf.samurai1.entity.*
 import smf.samurai1.keyboards.getInlineCalendarMarkup
 import smf.samurai1.keyboards.getInlineClockMarkup
 import smf.samurai1.keyboards.getRescheduleMarkupInline
@@ -24,6 +24,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.tinylog.Logger
+import smf.samurai1.repository.AppointmentRepo
+import smf.samurai1.repository.ClientRepo
 import java.time.*
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit

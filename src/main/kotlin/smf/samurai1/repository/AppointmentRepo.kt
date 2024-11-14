@@ -1,7 +1,8 @@
-package smf.samurai1.domain
+package smf.samurai1.repository
 
-import smf.samurai1.isFuture
 import org.slf4j.LoggerFactory
+import smf.samurai1.entity.Appointment
+import smf.samurai1.isFuture
 import java.sql.Connection
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -173,10 +174,12 @@ class AppointmentRepo(
         }
         return false
     }
-}
 
-private fun ofTimeStamp(ts: String): LocalDateTime {
-    val (year, month, day) = ts.split(" ")[0].split("-").map { it.toInt() }
-    val (hour, minute) = ts.split(" ")[1].split(":").slice(0..1).map { it.toInt() }
-    return LocalDateTime.of(year, month, day, hour, minute)
+    companion object {
+        private fun ofTimeStamp(ts: String): LocalDateTime {
+            val (year, month, day) = ts.split(" ")[0].split("-").map { it.toInt() }
+            val (hour, minute) = ts.split(" ")[1].split(":").slice(0..1).map { it.toInt() }
+            return LocalDateTime.of(year, month, day, hour, minute)
+        }
+    }
 }

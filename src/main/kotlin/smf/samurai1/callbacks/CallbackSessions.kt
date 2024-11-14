@@ -1,6 +1,6 @@
-package smf.samurai1.domain
+package smf.samurai1.callbacks
 
-import java.util.*
+import java.util.Stack
 
 class CallbackSessions {
     // chatId -> stack of arguments for current action

@@ -6,7 +6,7 @@ import dev.inmo.tgbotapi.types.buttons.inline.dataInlineButton
 import dev.inmo.tgbotapi.utils.MatrixBuilder
 import dev.inmo.tgbotapi.utils.RowBuilder
 import smf.samurai1.config.Locale
-import smf.samurai1.domain.AppointmentRepo
+import smf.samurai1.repository.AppointmentRepo
 import java.time.format.DateTimeFormatter
 
 fun getContractorCancelInline(
