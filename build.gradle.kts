@@ -23,14 +23,25 @@ kotlin {
     jvmToolchain(libs.versions.java.get().toInt())
 }
 
-application {
-    mainClass.set("dev.scroogemcfawk.manicurebot.AppKt")
-}
-
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile>().configureEach {
     jvmTargetValidationMode.set(org.jetbrains.kotlin.gradle.dsl.jvm.JvmTargetValidationMode.ERROR)
 }
 
-tasks.jar {
+tasks.register<Jar>("fatJar") {
+    group = "build"
+
     archiveBaseName.set(project.name)
+
+    dependsOn(configurations.runtimeClasspath)
+
+    from(
+        sourceSets.main.get().output,
+        configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
+    )
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    manifest.attributes(
+        "Main-Class" to "smf.samurai1.AppKt"
+    )
 }
