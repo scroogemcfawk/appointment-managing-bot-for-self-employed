@@ -1,4 +1,4 @@
-package dev.scroogemcfawk.manicurebot.commands
+package smf.samurai1.commands
 
 import dev.inmo.tgbotapi.bot.TelegramBot
 import dev.inmo.tgbotapi.extensions.api.answers.answerCallbackQuery
@@ -18,12 +18,12 @@ import dev.inmo.tgbotapi.types.message.abstracts.CommonMessage
 import dev.inmo.tgbotapi.types.message.content.TextContent
 import dev.inmo.tgbotapi.types.queries.callback.DataCallbackQuery
 import dev.inmo.tgbotapi.utils.RiskFeature
-import dev.scroogemcfawk.manicurebot.callbacks.restore
-import dev.scroogemcfawk.manicurebot.chatId
-import dev.scroogemcfawk.manicurebot.config.Config
-import dev.scroogemcfawk.manicurebot.config.Locale
-import dev.scroogemcfawk.manicurebot.domain.*
-import dev.scroogemcfawk.manicurebot.keyboards.*
+import smf.samurai1.callbacks.restore
+import smf.samurai1.chatId
+import smf.samurai1.config.Config
+import smf.samurai1.config.Locale
+import smf.samurai1.domain.*
+import smf.samurai1.keyboards.*
 import kotlinx.coroutines.flow.first
 import org.tinylog.Logger
 import java.time.YearMonth

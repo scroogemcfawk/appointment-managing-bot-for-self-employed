@@ -1,4 +1,4 @@
-package dev.scroogemcfawk.manicurebot
+package smf.samurai1
 
 import dev.inmo.tgbotapi.extensions.api.bot.getMe
 import dev.inmo.tgbotapi.extensions.api.telegramBot
@@ -10,14 +10,14 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onUnhand
 import dev.inmo.tgbotapi.extensions.utils.extensions.raw.text
 import dev.inmo.tgbotapi.utils.PreviewFeature
 import dev.inmo.tgbotapi.utils.RiskFeature
-import dev.scroogemcfawk.manicurebot.callbacks.CallbackHandler
-import dev.scroogemcfawk.manicurebot.commands.CommandHandler
-import dev.scroogemcfawk.manicurebot.config.Config
-import dev.scroogemcfawk.manicurebot.config.Locale
-import dev.scroogemcfawk.manicurebot.domain.Appointment
-import dev.scroogemcfawk.manicurebot.domain.AppointmentRepo
-import dev.scroogemcfawk.manicurebot.domain.Client
-import dev.scroogemcfawk.manicurebot.domain.ClientRepo
+import smf.samurai1.callbacks.CallbackHandler
+import smf.samurai1.commands.CommandHandler
+import smf.samurai1.config.Config
+import smf.samurai1.config.Locale
+import smf.samurai1.domain.Appointment
+import smf.samurai1.domain.AppointmentRepo
+import smf.samurai1.domain.Client
+import smf.samurai1.domain.ClientRepo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

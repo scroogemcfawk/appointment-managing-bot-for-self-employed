@@ -1,34 +1,28 @@
-package dev.scroogemcfawk.manicurebot.keyboards
+package smf.samurai1.keyboards
 
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.InlineKeyboardButton
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardMarkup
 import dev.inmo.tgbotapi.types.buttons.inline.dataInlineButton
 import dev.inmo.tgbotapi.utils.MatrixBuilder
 import dev.inmo.tgbotapi.utils.RowBuilder
-import dev.scroogemcfawk.manicurebot.domain.AppointmentRepo
+import smf.samurai1.config.Locale
+import smf.samurai1.domain.AppointmentRepo
 import java.time.format.DateTimeFormatter
 
-fun getAppointmentListInlineMarkup(
-    chatId: Long,
+fun getContractorCancelInline(
+    contractor: Long,
     appointments: AppointmentRepo,
     dateTimeFormat: DateTimeFormatter,
-    callbackBase: String,
-    filter: Boolean = true
+    locale: Locale
 ): InlineKeyboardMarkup {
-
     val mb = MatrixBuilder<InlineKeyboardButton>()
-    val appointmentsToIterate = if (filter) {
-        appointments.allFuture.filter { it.client == chatId }
-    } else {
-        appointments.allFuture
-    }
 
-    for (a in appointmentsToIterate) {
+    for (a in appointments.all.filter { it.client == contractor }.sortedBy { it.datetime }) {
         val rb = RowBuilder<InlineKeyboardButton>()
         rb.add(
             dataInlineButton(
                 a.datetime.format(dateTimeFormat),
-                "${callbackBase}:${a.toCallbackString()}"
+                "c:${locale.cancelCommand}:${a.toCallbackString()}"
             )
         )
         mb.add(rb.row)

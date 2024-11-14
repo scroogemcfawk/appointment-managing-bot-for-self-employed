@@ -1,11 +1,11 @@
-package dev.scroogemcfawk.manicurebot.keyboards
+package smf.samurai1.keyboards
 
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.InlineKeyboardButton
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardMarkup
 import dev.inmo.tgbotapi.types.buttons.inline.dataInlineButton
 import dev.inmo.tgbotapi.utils.MatrixBuilder
 import dev.inmo.tgbotapi.utils.RowBuilder
-import dev.scroogemcfawk.manicurebot.config.Locale
+import smf.samurai1.config.Locale
 import java.time.LocalDate
 import java.time.YearMonth
 

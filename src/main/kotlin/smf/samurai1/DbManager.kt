@@ -1,4 +1,4 @@
-package dev.scroogemcfawk.manicurebot
+package smf.samurai1
 
 import org.tinylog.Logger
 import java.sql.Connection

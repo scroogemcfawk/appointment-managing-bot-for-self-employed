@@ -1,4 +1,4 @@
-package dev.scroogemcfawk.manicurebot.domain
+package smf.samurai1.domain
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

@@ -1,6 +1,6 @@
-package dev.scroogemcfawk.manicurebot
+package smf.samurai1
 
-import dev.scroogemcfawk.manicurebot.config.Config
+import smf.samurai1.config.Config
 import kotlinx.serialization.json.Json
 import org.tinylog.Logger
 import java.io.File

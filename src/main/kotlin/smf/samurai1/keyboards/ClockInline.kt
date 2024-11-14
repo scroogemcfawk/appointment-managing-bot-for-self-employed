@@ -1,4 +1,4 @@
-package dev.scroogemcfawk.manicurebot.keyboards
+package smf.samurai1.keyboards
 
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.InlineKeyboardButton
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardMarkup

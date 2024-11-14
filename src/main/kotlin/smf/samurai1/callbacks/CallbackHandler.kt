@@ -1,4 +1,4 @@
-package dev.scroogemcfawk.manicurebot.callbacks
+package smf.samurai1.callbacks
 
 import dev.inmo.tgbotapi.extensions.api.answers.answerCallbackQuery
 import dev.inmo.tgbotapi.extensions.api.delete
@@ -13,13 +13,13 @@ import dev.inmo.tgbotapi.requests.edit.text.EditChatMessageText
 import dev.inmo.tgbotapi.types.ChatId
 import dev.inmo.tgbotapi.types.queries.callback.DataCallbackQuery
 import dev.inmo.tgbotapi.utils.RiskFeature
-import dev.scroogemcfawk.manicurebot.chatId
-import dev.scroogemcfawk.manicurebot.config.Config
-import dev.scroogemcfawk.manicurebot.config.Locale
-import dev.scroogemcfawk.manicurebot.domain.*
-import dev.scroogemcfawk.manicurebot.keyboards.getInlineCalendarMarkup
-import dev.scroogemcfawk.manicurebot.keyboards.getInlineClockMarkup
-import dev.scroogemcfawk.manicurebot.keyboards.getRescheduleMarkupInline
+import smf.samurai1.chatId
+import smf.samurai1.config.Config
+import smf.samurai1.config.Locale
+import smf.samurai1.domain.*
+import smf.samurai1.keyboards.getInlineCalendarMarkup
+import smf.samurai1.keyboards.getInlineClockMarkup
+import smf.samurai1.keyboards.getRescheduleMarkupInline
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch

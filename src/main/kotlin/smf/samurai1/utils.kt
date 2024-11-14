@@ -1,4 +1,4 @@
-package dev.scroogemcfawk.manicurebot
+package smf.samurai1
 
 import dev.inmo.tgbotapi.abstracts.WithChat
 import dev.inmo.tgbotapi.types.ChatId

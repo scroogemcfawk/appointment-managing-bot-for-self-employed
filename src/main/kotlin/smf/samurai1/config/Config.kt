@@ -1,4 +1,4 @@
-package dev.scroogemcfawk.manicurebot.config
+package smf.samurai1.config
 
 import kotlinx.serialization.Serializable
 

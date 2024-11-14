@@ -1,4 +1,4 @@
-package dev.scroogemcfawk.manicurebot.domain
+package smf.samurai1.domain
 
 import java.time.LocalDate
 import java.time.LocalDateTime

@@ -1,9 +1,9 @@
-package dev.scroogemcfawk.manicurebot.keyboards
+package smf.samurai1.keyboards
 
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardMarkup
 import dev.inmo.tgbotapi.types.buttons.inline.dataInlineButton
 import dev.inmo.tgbotapi.utils.flatMatrix
-import dev.scroogemcfawk.manicurebot.domain.Appointment
+import smf.samurai1.domain.Appointment
 
 fun getYesNoInlineMarkup(a: Appointment): InlineKeyboardMarkup {
     val mb = flatMatrix(

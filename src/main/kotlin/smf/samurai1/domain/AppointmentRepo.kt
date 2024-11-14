@@ -1,6 +1,6 @@
-package dev.scroogemcfawk.manicurebot.domain
+package smf.samurai1.domain
 
-import dev.scroogemcfawk.manicurebot.isFuture
+import smf.samurai1.isFuture
 import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.time.LocalDateTime

@@ -1,4 +1,4 @@
-package dev.scroogemcfawk.manicurebot.domain
+package smf.samurai1.domain
 
 data class Client(val id: Long, val name: String, val phoneNumber: String) {
 

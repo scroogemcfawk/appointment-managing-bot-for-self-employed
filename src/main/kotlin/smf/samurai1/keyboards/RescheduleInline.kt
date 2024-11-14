@@ -1,8 +1,8 @@
-package dev.scroogemcfawk.manicurebot.keyboards
+package smf.samurai1.keyboards
 
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardMarkup
-import dev.scroogemcfawk.manicurebot.config.Locale
-import dev.scroogemcfawk.manicurebot.domain.AppointmentRepo
+import smf.samurai1.config.Locale
+import smf.samurai1.domain.AppointmentRepo
 
 
 fun getRescheduleMarkupInline(

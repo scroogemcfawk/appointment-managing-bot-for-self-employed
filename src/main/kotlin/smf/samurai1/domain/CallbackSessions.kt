@@ -1,7 +1,6 @@
-package dev.scroogemcfawk.manicurebot.domain
+package smf.samurai1.domain
 
 import java.util.*
-import kotlin.collections.HashMap
 
 class CallbackSessions {
     // chatId -> stack of arguments for current action
