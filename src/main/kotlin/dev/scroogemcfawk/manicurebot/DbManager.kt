@@ -1,10 +1,30 @@
 package dev.scroogemcfawk.manicurebot
 
+import org.tinylog.Logger
 import java.sql.Connection
 import java.sql.DriverManager
+import kotlin.io.path.Path
+import kotlin.io.path.absolutePathString
+import kotlin.io.path.createFile
+import kotlin.io.path.createParentDirectories
+import kotlin.io.path.notExists
 
-class DbManager(dataBaseUrl: String) {
-    val con: Connection = DriverManager.getConnection(dataBaseUrl)
+class DbManager(databaseName: String) {
+
+    val databasePath = "/home/smf/.IdeaProjects/samurai-1/data/$databaseName"
+    val con: Connection
+
+    init {
+        val path = Path(databasePath)
+        path.createParentDirectories()
+        if (path.notExists()) {
+            path.createFile()
+            Logger.info {
+                "Database file created: ${path.absolutePathString()}"
+            }
+        }
+        con = DriverManager.getConnection("jdbc:sqlite:${path.absolutePathString()}")
+    }
 
     private fun createClientTable() {
         val sql = """

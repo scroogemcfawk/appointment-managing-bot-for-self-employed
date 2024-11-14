@@ -12,27 +12,29 @@ suspend fun main(args: Array<String>) {
 
     val json = Json { ignoreUnknownKeys = true }
 
+    val configFile = File(args.first())
+
     val config = try {
-        json.decodeFromString(Config.serializer(), File(args.first()).readText())
+        json.decodeFromString(Config.serializer(), configFile.readText())
     } catch (e: Exception) {
-        Logger.error{"Failed get config: ${e.message}"}
+        Logger.error{ "Failed get config: $e" }
         return
     }
 
     val con = try {
-        val dbManager = DbManager(config.dataSourceUrl)
+        val dbManager = DbManager(config.databaseName)
         dbManager.initDataBase()
 //        dbManager.dropData()
 
          dbManager.con
     } catch (e: Exception) {
-        Logger.error{"Failed database initialization: ${e.message}"}
+        Logger.error{ "Failed database initialization: $e" }
         return
     }
 
-    val bot = Bot(config, con)
-
     try {
+        val bot = Bot(config, con, configFile)
+
         bot.run().join()
     } catch (e: Exception) {
         Logger.error{ e.message }

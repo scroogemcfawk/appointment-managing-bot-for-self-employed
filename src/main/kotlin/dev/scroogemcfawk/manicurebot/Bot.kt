@@ -29,13 +29,14 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.Month
 
-class Bot(private val config: Config, con: Connection) {
+class Bot(private val config: Config, con: Connection, configFile: File) {
 
     private val locale = try {
         val ignoringKeys = Json {
             ignoreUnknownKeys = true
         }
-        ignoringKeys.decodeFromString(Locale.serializer(), File(config.locale).readText())
+        ignoringKeys.decodeFromString(Locale.serializer(),
+                                      configFile.toPath().parent.resolve(config.locale).toFile().readText())
     } catch (e: Exception) {
         throw Exception("Failed locale deserialization: ${e.message}")
     }

@@ -9,5 +9,5 @@ data class Config(
     val dev: Long? = null,
     val manager: Long? = null,
     val notifyClientBeforeAppointmentInHours: Int = 24,
-    val dataSourceUrl: String,
+    val databaseName: String,
 )
