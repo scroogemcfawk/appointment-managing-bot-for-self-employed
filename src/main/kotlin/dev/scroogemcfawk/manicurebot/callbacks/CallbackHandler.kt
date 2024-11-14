@@ -34,8 +34,8 @@ class CallbackHandler(
     private val ctx: BehaviourContext,
     config: Config,
     private val locale: Locale,
-    private val clientChats: ClientList,
-    private val appointments: AppointmentList
+    private val clientChats: ClientRepo,
+    private val appointments: AppointmentRepo
 ) {
 
     private val bot = ctx.bot
@@ -76,7 +76,7 @@ class CallbackHandler(
 
     @OptIn(RiskFeature::class)
     @Suppress("LocalVariableName")
-    private suspend fun processAdd(cb: DataCallbackQuery, data: String, appointments: AppointmentList) {
+    private suspend fun processAdd(cb: DataCallbackQuery, data: String, appointments: AppointmentRepo) {
         val (action, value) = data.split(":", limit = 2)
         when (action) {
             "select" -> {
@@ -164,7 +164,7 @@ class CallbackHandler(
     private suspend fun processAppointment(
         cb: DataCallbackQuery,
         data: String,
-        appointments: AppointmentList)
+        appointments: AppointmentRepo)
     {
         if (data == "cancel") {
             bot.answerCallbackQuery(cb)
@@ -219,7 +219,7 @@ class CallbackHandler(
     private suspend fun processContractorCallback(
         cb: DataCallbackQuery,
         cbData: String,
-        appointments: AppointmentList)
+        appointments: AppointmentRepo)
     {
         try {
             val (source, data) = cbData.split(":", limit = 2)
@@ -321,7 +321,7 @@ class CallbackHandler(
         }
     }
 
-    suspend fun processCallback(cb: DataCallbackQuery, appointments: AppointmentList) {
+    suspend fun processCallback(cb: DataCallbackQuery, appointments: AppointmentRepo) {
         try {
             val (source, data) = cb.data.split(":", limit = 2)
             Logger.debug{"Source: $source"}

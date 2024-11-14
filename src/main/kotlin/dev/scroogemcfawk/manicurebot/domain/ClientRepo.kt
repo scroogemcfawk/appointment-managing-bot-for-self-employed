@@ -4,7 +4,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.sql.Connection
 
-class ClientList(private val con: Connection) {
+class ClientRepo(private val con: Connection) {
 //    private val clientChats = HashMap<Long, Client>()
 private val log: Logger = LoggerFactory.getLogger("ClientList")
 

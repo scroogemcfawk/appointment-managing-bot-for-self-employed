@@ -15,9 +15,9 @@ import dev.scroogemcfawk.manicurebot.commands.CommandHandler
 import dev.scroogemcfawk.manicurebot.config.Config
 import dev.scroogemcfawk.manicurebot.config.Locale
 import dev.scroogemcfawk.manicurebot.domain.Appointment
-import dev.scroogemcfawk.manicurebot.domain.AppointmentList
+import dev.scroogemcfawk.manicurebot.domain.AppointmentRepo
 import dev.scroogemcfawk.manicurebot.domain.Client
-import dev.scroogemcfawk.manicurebot.domain.ClientList
+import dev.scroogemcfawk.manicurebot.domain.ClientRepo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -43,8 +43,8 @@ class Bot(private val config: Config, con: Connection) {
     private val bot = telegramBot(config.token)
     private val scope = CoroutineScope(Dispatchers.Default)
 
-    private val appointments = AppointmentList(locale.dateTimeFormat, con)
-    private val clientChats = ClientList(con)
+    private val appointments = AppointmentRepo(locale.dateTimeFormat, con)
+    private val clientChats = ClientRepo(con)
 
     init {
         try {

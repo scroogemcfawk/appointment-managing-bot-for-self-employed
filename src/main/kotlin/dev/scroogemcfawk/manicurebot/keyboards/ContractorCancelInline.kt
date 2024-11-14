@@ -6,12 +6,12 @@ import dev.inmo.tgbotapi.types.buttons.inline.dataInlineButton
 import dev.inmo.tgbotapi.utils.MatrixBuilder
 import dev.inmo.tgbotapi.utils.RowBuilder
 import dev.scroogemcfawk.manicurebot.config.Locale
-import dev.scroogemcfawk.manicurebot.domain.AppointmentList
+import dev.scroogemcfawk.manicurebot.domain.AppointmentRepo
 import java.time.format.DateTimeFormatter
 
 fun getContractorCancelInline(
     contractor: Long,
-    appointments: AppointmentList,
+    appointments: AppointmentRepo,
     dateTimeFormat: DateTimeFormatter,
     locale: Locale
 ): InlineKeyboardMarkup {

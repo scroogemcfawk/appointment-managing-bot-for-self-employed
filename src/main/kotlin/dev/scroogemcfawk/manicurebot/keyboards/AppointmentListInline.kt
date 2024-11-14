@@ -1,17 +1,16 @@
 package dev.scroogemcfawk.manicurebot.keyboards
 
-import dev.inmo.tgbotapi.types.ChatId
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.InlineKeyboardButton
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardMarkup
 import dev.inmo.tgbotapi.types.buttons.inline.dataInlineButton
 import dev.inmo.tgbotapi.utils.MatrixBuilder
 import dev.inmo.tgbotapi.utils.RowBuilder
-import dev.scroogemcfawk.manicurebot.domain.AppointmentList
+import dev.scroogemcfawk.manicurebot.domain.AppointmentRepo
 import java.time.format.DateTimeFormatter
 
 fun getAppointmentListInlineMarkup(
     chatId: Long,
-    appointments: AppointmentList,
+    appointments: AppointmentRepo,
     dateTimeFormat: DateTimeFormatter,
     callbackBase: String,
     filter: Boolean = true

@@ -6,16 +6,15 @@ import dev.inmo.tgbotapi.types.buttons.inline.dataInlineButton
 import dev.inmo.tgbotapi.utils.MatrixBuilder
 import dev.inmo.tgbotapi.utils.RowBuilder
 import dev.inmo.tgbotapi.utils.plus
-import dev.inmo.tgbotapi.utils.row
 import dev.scroogemcfawk.manicurebot.config.Locale
-import dev.scroogemcfawk.manicurebot.domain.AppointmentList
+import dev.scroogemcfawk.manicurebot.domain.AppointmentRepo
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
 fun getInlineAvailableAppointmentsMarkup(
     chatId: Long,
-    appointments: AppointmentList,
+    appointments: AppointmentRepo,
     locale: Locale,
     callBackSource: String = locale.appointmentCommand,
     excludeUserChat: Long? = null
@@ -27,7 +26,7 @@ fun getInlineAvailableAppointmentsMarkup(
 
 private fun MatrixBuilder<InlineKeyboardButton>.addAvailableAppointments(
     chatId: Long,
-    appointments: AppointmentList,
+    appointments: AppointmentRepo,
     locale: Locale,
     callBackSource: String = locale.appointmentCommand,
     excludeUserChat: Long? = null

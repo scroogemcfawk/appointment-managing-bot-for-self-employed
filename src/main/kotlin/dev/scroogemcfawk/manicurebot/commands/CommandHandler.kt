@@ -35,7 +35,7 @@ class CommandHandler(
     private val ctx: BehaviourContext,
     config: Config,
     private val locale: Locale,
-    private val clientChats: ClientList
+    private val clientChats: ClientRepo
 ) {
 
     private val bot: TelegramBot = ctx.bot
@@ -114,7 +114,7 @@ class CommandHandler(
 
     //==================================== CLIENT ==================================================
 
-    suspend fun appointment(msg: TextMessage, appointments: AppointmentList) {
+    suspend fun appointment(msg: TextMessage, appointments: AppointmentRepo) {
         try {
             if (!appointments.hasAvailable()) {
                 bot.send(msg.chat.id, locale.appointmentAppointmentsNotAvailableMessage)
@@ -132,7 +132,7 @@ class CommandHandler(
     }
 
     @OptIn(RiskFeature::class)
-    suspend fun reschedule(msg: CommonMessage<TextContent>, appointments: AppointmentList) {
+    suspend fun reschedule(msg: CommonMessage<TextContent>, appointments: AppointmentRepo) {
         try {
             if (!appointments.hasAvailable()) {
                 bot.send(
@@ -198,7 +198,7 @@ class CommandHandler(
     }
 
 
-    suspend fun cancel(msg: TextMessage, appointments: AppointmentList) {
+    suspend fun cancel(msg: TextMessage, appointments: AppointmentRepo) {
         try {
             if (!appointments.clientHasAppointment(msg.chat.id.chatId)) {
                 bot.send(msg.chat.id, locale.cancelNoAppointmentsFoundMessageTemplate.replace("\$1", locale.appointmentCommand))
@@ -231,7 +231,7 @@ class CommandHandler(
         }
     }
 
-    suspend fun list(msg: TextMessage, appointments: AppointmentList) {
+    suspend fun list(msg: TextMessage, appointments: AppointmentRepo) {
         try {
             if (msg.chat.id == contractor?.chatId) {
                 ArrayList<String>().joinToString("") { it.length.toString() }
@@ -253,7 +253,7 @@ class CommandHandler(
         }
     }
 
-    suspend fun delete(msg: TextMessage, appointments: AppointmentList) {
+    suspend fun delete(msg: TextMessage, appointments: AppointmentRepo) {
         try {
             if (msg.chat.id == contractor?.chatId) {
                 bot.send(
@@ -295,7 +295,7 @@ class CommandHandler(
     //=============================== END OF COMMAND SECTION =======================================
     //=============================== HELPER METHOD SECTION ========================================
 
-    private suspend fun makeAppointmentAsClient(msg: TextMessage, appointments: AppointmentList) {
+    private suspend fun makeAppointmentAsClient(msg: TextMessage, appointments: AppointmentRepo) {
         if (msg.chatId !in clientChats) {
             bot.send(
                 msg.chat.id, locale.appointmentNotRegisteredMessageTemplate
@@ -324,7 +324,7 @@ class CommandHandler(
         }
     }
 
-    private suspend fun makeAppointmentAsContractor(appointments: AppointmentList) {
+    private suspend fun makeAppointmentAsContractor(appointments: AppointmentRepo) {
         if (contractor != null) {
             bot.send(
                 contractor.chatId,
@@ -338,7 +338,7 @@ class CommandHandler(
         }
     }
 
-    private suspend fun cancelAsClient(msg: TextMessage, appointments: AppointmentList) {
+    private suspend fun cancelAsClient(msg: TextMessage, appointments: AppointmentRepo) {
         appointments.getClientAppointmentOrNull(msg.chat.id.chatId)?.run {
             bot.send(
                 msg.chat,
@@ -349,7 +349,7 @@ class CommandHandler(
         } ?: Logger.error{"CommandHandler.cancelAsClient(): Appointment not found."}
     }
 
-    private suspend fun cancelAsContractor(msg: TextMessage, appointments: AppointmentList) {
+    private suspend fun cancelAsContractor(msg: TextMessage, appointments: AppointmentRepo) {
         bot.send(
             msg.chat,
             locale.cancelContractorChoosePromptMessage,
