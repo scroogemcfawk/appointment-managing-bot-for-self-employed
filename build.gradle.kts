@@ -15,6 +15,7 @@ dependencies {
     implementation(libs.sqlite.jdbc)
     implementation(libs.tinylog.api)
     implementation(libs.tinylog.impl)
+    implementation(libs.slf4j.tinylog)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.tgbot.api)
 }
