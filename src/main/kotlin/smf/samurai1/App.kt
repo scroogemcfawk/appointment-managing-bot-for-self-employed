@@ -22,7 +22,7 @@ suspend fun main(args: Array<String>) {
     val config = try {
         json.decodeFromString(Config.serializer(), configFile.readText())
     } catch (e: Exception) {
-        Logger.error{ "Failed get config: $e" }
+        Logger.error { "Failed get config: $e" }
         val configDir = Path(".").resolve("config")
         configDir.createDirectories()
         val configFile = configDir.resolve("example_config.json")
@@ -37,15 +37,13 @@ suspend fun main(args: Array<String>) {
         val databaseManager = DatabaseManager(config.databaseName)
         databaseManager.getConnection()
     } catch (e: Exception) {
-        Logger.error{ "Failed database initialization: $e" }
+        Logger.error { "Failed database initialization: $e" }
         return
     }
 
     try {
-        val bot = Bot(config, con, configFile)
-
-        bot.run().join()
+        Bot(config, con, configFile).run().join()
     } catch (e: Exception) {
-        Logger.error{ e.message }
+        Logger.error { e }
     }
 }
