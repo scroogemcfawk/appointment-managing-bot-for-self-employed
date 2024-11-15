@@ -235,9 +235,10 @@ class CommandHandler(
         try {
             if (msg.chat.id == contractor?.chatId) {
                 ArrayList<String>().joinToString("") { it.length.toString() }
+                val futureAppointments = appointments.allFuture
                 bot.sendTextMessage(
                     msg.chat.id,
-                    appointments.allFuture.sortedBy { it.datetime }.run{
+                    futureAppointments.sortedBy { it.datetime }.run{
                         if (this.isNotEmpty()) this.joinToString("\n\n") { app ->
 //                            app.datetime.format(dateTimeFormat) + " " + (app.client?.let {
 //                                "${clientChats[it]?.name ?: locale.available} ${clientChats[it]?.phoneNumber ?: ""}"
@@ -249,7 +250,7 @@ class CommandHandler(
                 )
             }
         } catch (e: Exception) {
-            Logger.error{"Error on /${locale.listCommand} : ${e.message}"}
+            Logger.error { "Error on /${locale.listCommand}: $e" }
         }
     }
 

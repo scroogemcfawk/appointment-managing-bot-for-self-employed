@@ -4,6 +4,8 @@ import org.tinylog.Logger
 import smf.samurai1.entity.Appointment
 import smf.samurai1.isFuture
 import java.sql.Connection
+import java.sql.ResultSet
+import java.sql.Types
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -23,17 +25,14 @@ class AppointmentRepo(
     @Suppress("DuplicatedCode")
     val all: List<Appointment>
         get() {
-            val sql = "select * from appointment"
-            val s = con.createStatement()
-            val rs = s.executeQuery(sql)
+            val statement = con.prepareStatement(SQL.APPOINTMENT.SELECT_ALL)
+
+            val rs = statement.executeQuery()
 
             val local = ArrayList<Appointment>()
 
             while (rs.next()) {
-                val ts = rs.getTimestamp(2)
-                val client = if (rs.getLong(3) == 0L) null else rs.getLong(3)
-                val app = Appointment(ofTimeStamp(ts.toString()), client)
-                local.add(app)
+                local.add(rs.toAppointment())
             }
 
             return local
@@ -42,24 +41,18 @@ class AppointmentRepo(
     @Suppress("DuplicatedCode")
     val allFuture: List<Appointment>
         get() {
-            val sql = "select * from appointment where datetime > date()"
-            val s = con.createStatement()
-            val rs = s.executeQuery(sql)
+            val statement = con.prepareStatement(SQL.APPOINTMENT.SELECT_ALL_IN_FUTURE)
+
+            val rs = statement.executeQuery()
 
             val local = ArrayList<Appointment>()
 
             while (rs.next()) {
-                val ts = rs.getTimestamp(2)
-                val client = if (rs.getLong(3) == 0L) null else rs.getLong(3)
-                val app = Appointment(ofTimeStamp(ts.toString()), client)
-                local.add(app)
+                local.add(rs.toAppointment())
             }
 
             return local
-
-//            return appointments.filter { it.datetime > LocalDateTime.now() }
         }
-
 
     fun add(a: Appointment) {
         appointments.add(a)
@@ -67,16 +60,19 @@ class AppointmentRepo(
     }
 
     fun clearOld() {
-        val sql = "delete from APPOINTMENT where DATETIME < date()"
-        val s = con.createStatement()
-        s.execute(sql)
+        val statement = con.prepareStatement(SQL.APPOINTMENT.DELETE_ALL_IN_PAST)
+        statement.execute()
     }
 
     private fun addToTable(a: Appointment) {
         try {
-            val sql = "insert into appointment(datetime, client) values('${a.datetime}', ${a.client});"
-            val s = con.createStatement()
-            s.execute(sql)
+            val s = con.prepareStatement(SQL.APPOINTMENT.INSERT) {
+                setString(1, a.datetime.toString())
+                a.client ?.let{
+                    setLong(2, it)
+                } ?: setNull(2, Types.INTEGER)
+            }
+            s.execute()
         } catch (e: Exception) {
             Logger.error { e }
         }
@@ -94,9 +90,14 @@ class AppointmentRepo(
 
     private fun cancelInTable(a: Appointment) {
         Logger.debug { a.toString() }
-        val sql = "update appointment set client = null where DATETIME = '${a.datetime}' and client = ${a.client}"
-        val s = con.createStatement()
-        s.execute(sql)
+        if (a.client == null) {
+            return
+        }
+        val statement = con.prepareStatement(SQL.APPOINTMENT.CANCEL) {
+            setString(1, a.datetime.toString())
+            setLong(2, a.client!!)
+        }
+        statement.execute()
     }
 
     fun delete(a: Appointment) {
@@ -105,9 +106,10 @@ class AppointmentRepo(
     }
 
     private fun deleteInTable(a: Appointment) {
-        val sql = "delete from appointment where DATETIME = '${a.datetime}'"
-        val s = con.createStatement()
-        s.execute(sql)
+        val s = con.prepareStatement(SQL.APPOINTMENT.DELETE) {
+            setString(1, a.datetime.toString())
+        }
+        s.execute()
     }
 
     fun getFutureAppointmentOrNull(chatId: Long): Appointment? {
@@ -140,9 +142,13 @@ class AppointmentRepo(
     }
 
     private fun assignClientInTable(a: Appointment, id: Long?) {
-        val sql = "update appointment set client = $id where DATETIME = '${a.datetime}' "
-        val s = con.createStatement()
-        s.execute(sql)
+        val statement = con.prepareStatement(SQL.APPOINTMENT.ASSIGN_CLIENT) {
+            id ?.let{
+                setLong(1, it)
+            } ?: setNull(1, Types.INTEGER)
+            setString(2, a.datetime.toString())
+        }
+        statement.execute()
     }
 
     fun isAvailable(a: Appointment): Boolean {
@@ -182,9 +188,16 @@ class AppointmentRepo(
 
     companion object {
         private fun ofTimeStamp(ts: String): LocalDateTime {
-            val (year, month, day) = ts.split(" ")[0].split("-").map { it.toInt() }
-            val (hour, minute) = ts.split(" ")[1].split(":").slice(0..1).map { it.toInt() }
+            val split = ts.split("T")
+            val (year, month, day) = split[0].split("-").map { it.toInt() }
+            val (hour, minute) = split[1].split(":").slice(0..1).map { it.toInt() }
             return LocalDateTime.of(year, month, day, hour, minute)
+        }
+
+        private fun ResultSet.toAppointment(): Appointment {
+            val datetime = getString(2)
+            val client = if (getLong(3) == 0L) null else getLong(3)
+            return Appointment(ofTimeStamp(datetime), client)
         }
     }
 }
