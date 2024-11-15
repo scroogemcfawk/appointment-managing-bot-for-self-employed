@@ -17,18 +17,18 @@ suspend fun main(args: Array<String>) {
 
     val json = Json { ignoreUnknownKeys = true }
 
-    val configFile = File(args.first())
-
+    var configFile: File? = null
     val config = try {
+        configFile = File(args.first())
         json.decodeFromString(Config.serializer(), configFile.readText())
     } catch (e: Exception) {
         Logger.error { "Failed get config: $e" }
         val configDir = Path(".").resolve("config")
         configDir.createDirectories()
-        val configFile = configDir.resolve("example_config.json")
-        if (configFile.notExists()) {
-            configFile.createFile()
-            configFile.toFile().writeText(readResourceFile("example_config.json"))
+        val configPath = configDir.resolve("example_config.json")
+        if (configPath.notExists()) {
+            configPath.createFile()
+            configPath.toFile().writeText(readResourceFile("example_config.json"))
         }
         return
     }
