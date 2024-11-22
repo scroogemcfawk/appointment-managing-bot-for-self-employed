@@ -15,6 +15,7 @@ dependencies {
     implementation(libs.sqlite.jdbc)
     implementation(libs.tinylog.api)
     implementation(libs.tinylog.impl)
+    implementation(libs.slf4j.api)
     implementation(libs.slf4j.tinylog)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.tgbot.api)
@@ -45,4 +46,8 @@ tasks.register<Jar>("fatJar") {
     manifest.attributes(
         "Main-Class" to "smf.samurai1.AppKt"
     )
+}
+
+tasks.register<Task>("appId") {
+    println("${rootProject.name}:$version")
 }
