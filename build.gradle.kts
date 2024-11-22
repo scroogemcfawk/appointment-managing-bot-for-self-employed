@@ -47,3 +47,7 @@ tasks.register<Jar>("fatJar") {
         "Main-Class" to "smf.samurai1.AppKt"
     )
 }
+
+tasks.register<Task>("appId") {
+    println("${rootProject.name}:$version")
+}
