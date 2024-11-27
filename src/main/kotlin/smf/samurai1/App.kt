@@ -1,48 +1,24 @@
 package smf.samurai1
 
-import kotlinx.serialization.json.Json
 import org.tinylog.Logger
-import smf.samurai1.config.Config
-import smf.samurai1.repository.DatabaseManager
-import java.io.File
-import kotlin.io.path.Path
-import kotlin.io.path.createDirectories
-import kotlin.io.path.createFile
-import kotlin.io.path.notExists
+import smf.samurai1.config.ConfigManager
 
 /**
  * This method by default expects one argument in [args] field: telegram bot configuration
  */
 suspend fun main(args: Array<String>) {
 
-    val json = Json { ignoreUnknownKeys = true }
+    // todo fix signal propagation for child process in start script
 
-    var configFile: File? = null
-    val config = try {
-        configFile = File(args.first())
-        json.decodeFromString(Config.serializer(), configFile.readText())
-    } catch (e: Exception) {
-        Logger.error { "Failed get config: $e" }
-        val configDir = Path(".").resolve("config")
-        configDir.createDirectories()
-        val configPath = configDir.resolve("example_config.json")
-        if (configPath.notExists()) {
-            configPath.createFile()
-            configPath.toFile().writeText(readResourceFile("example_config.json"))
-        }
-        return
-    }
-
-    val con = try {
-        val databaseManager = DatabaseManager(config.databaseName)
-        databaseManager.getConnection()
-    } catch (e: Exception) {
-        Logger.error { "Failed database initialization: $e" }
+    val configManager = runCatching {
+        ConfigManager(args)
+    }.getOrElse{
+        Logger.error { it.message }
         return
     }
 
     try {
-        Bot(config, con, configFile).run().join()
+        Bot(configManager).run().join()
     } catch (e: Exception) {
         Logger.error { e }
     }

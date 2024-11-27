@@ -10,53 +10,33 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onUnhand
 import dev.inmo.tgbotapi.extensions.utils.extensions.raw.text
 import dev.inmo.tgbotapi.utils.PreviewFeature
 import dev.inmo.tgbotapi.utils.RiskFeature
-import smf.samurai1.callbacks.CallbackHandler
-import smf.samurai1.commands.CommandHandler
-import smf.samurai1.config.Config
-import smf.samurai1.config.Locale
-import smf.samurai1.entity.Appointment
-import smf.samurai1.repository.AppointmentRepo
-import smf.samurai1.entity.Client
-import smf.samurai1.repository.ClientRepo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.serialization.json.Json
 import org.tinylog.Logger
-import java.io.File
-import java.sql.Connection
+import smf.samurai1.callbacks.CallbackHandler
+import smf.samurai1.commands.CommandHandler
+import smf.samurai1.config.Config
+import smf.samurai1.config.ConfigManager
+import smf.samurai1.config.Locale
+import smf.samurai1.entity.Appointment
+import smf.samurai1.entity.Client
+import smf.samurai1.repository.AppointmentRepo
+import smf.samurai1.repository.ClientRepo
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.Month
-import kotlin.io.path.Path
-import kotlin.io.path.createDirectories
-import kotlin.io.path.createFile
-import kotlin.io.path.notExists
 
-class Bot(private val config: Config, con: Connection, configFile: File) {
+class Bot(configManager: ConfigManager) {
 
-    private val locale = try {
-        val ignoringKeys = Json {
-            ignoreUnknownKeys = true
-        }
-        ignoringKeys.decodeFromString(Locale.serializer(),
-                                      configFile.toPath().parent.resolve(config.locale).toFile().readText())
-    } catch (e: Exception) {
-        val configDir = Path(".").resolve("config")
-        configDir.createDirectories()
-        val configFile = configDir.resolve("example_locale.json")
-        if (configFile.notExists()) {
-            configFile.createFile()
-            configFile.toFile().writeText(readResourceFile("example_locale.json"))
-        }
-        throw Exception("Failed locale deserialization: ${e.message}")
-    }
+    private val config: Config = configManager.config
+    private val locale: Locale = configManager.locale
 
     private val bot = telegramBot(config.token)
     private val scope = CoroutineScope(Dispatchers.Default)
 
-    private val appointments = AppointmentRepo(locale.dateTimeFormat, con)
-    private val clientChats = ClientRepo(con)
+    private val appointments = AppointmentRepo(locale.dateTimeFormat, configManager.connection)
+    private val clientChats = ClientRepo(configManager.connection)
 
     init {
         try {
